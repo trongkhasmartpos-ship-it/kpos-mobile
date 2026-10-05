@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f97316" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <title>KPOS Mobile V8</title>
+  <title>KPOS • Web App & Mobile</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,7 +15,7 @@
 <body>
   <div id="app">
     <div style="min-height:100vh;display:grid;place-items:center;background:#fffaf7;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#111827;padding:24px;text-align:center">
-      <div><div style="font-size:42px;font-weight:900;color:#f97316">KP</div><b>Đang tải KPOS Mobile V8…</b></div>
+      <div><div style="font-size:42px;font-weight:900;color:#f97316">KP</div><b>Đang tải KPOS…</b><div style="font-size:12px;color:#6b7280;margin-top:6px">Mobile • Web App • Supabase Realtime</div></div>
     </div>
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
@@ -57,6 +57,16 @@
       const diagnostics = document.createElement("script");
       diagnostics.textContent = diagnosticsCode;
       document.body.appendChild(diagnostics);
+
+      const desktopCss = await fetchText("desktop/desktop.css");
+      const desktopStyle = document.createElement("style");
+      desktopStyle.textContent = desktopCss;
+      document.head.appendChild(desktopStyle);
+
+      const desktopCode = await fetchText("desktop/desktop.js");
+      const desktopScript = document.createElement("script");
+      desktopScript.textContent = desktopCode;
+      document.body.appendChild(desktopScript);
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
