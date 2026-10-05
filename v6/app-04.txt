@@ -1,0 +1,142 @@
+=db.invoices.filter(i=>i.customerId===c.id),ims=db.imeis.filter(i=>i.customerId===c.id),ws=db.warranties.filter(w=>w.phone===c.phone||ims.some(i=>i.value===w.imei)),ps=db.payments.filter(p=>p.customerId===c.id);
+    let body="";
+    if(tab==="orders")body=invs.map(i=>`<div class="item" onclick="openInvoiceDetail(${i.id})"><div class="item-main"><b>${i.code}</b><div class="small muted">${fmtDateTime(i.date)}</div></div><b>${money(i.total)}</b></div>`).join("")||'<div class="empty">Chưa có đơn hàng</div>';
+    if(tab==="imei")body=imeiCards(ims);
+    if(tab==="warranty")body=warrantyCards(ws);
+    if(tab==="payments")body=ps.map(p=>`<div class="item"><div class="item-main"><b>${p.code}</b><div class="small muted">${fmtDateTime(p.date)} • ${p.method}</div></div><b>${money(p.amount)}</b></div>`).join("")||'<div class="empty">Chưa có thanh toán</div>';
+    return sheet(c.name,`
+      <div class="info-grid"><div class="info-box"><div class="k">TỔNG MUA</div><div class="v">${money(c.total)}</div></div><div class="info-box"><div class="k">CÔNG NỢ</div><div class="v ${c.debt?"danger-text":""}">${money(c.debt)}</div></div></div>
+      <div class="card" style="margin-top:10px"><div class="row-between"><span>SĐT</span><b>${esc(c.phone)}</b></div><hr><div class="row-between"><span>CRM</span><span class="badge">${esc(c.status)}</span></div>${c.address?`<hr><div class="small muted">Địa chỉ</div><b>${esc(c.address)}</b>`:""}</div>
+      ${c.debt?`<button class="btn success block" style="margin-top:10px" onclick="openDebtPayment(${c.id})">💰 THU CÔNG NỢ</button>`:""}
+      <div class="tabs" style="margin-top:14px">${[["orders","Đơn hàng"],["imei","IMEI"],["warranty","Bảo hành"],["payments","Thanh toán"]].map(([v,l])=>`<button class="${tab===v?"active":""}" onclick="customerTab('${v}')">${l}</button>`).join("")}</div>
+      <div class="list">${body}</div>
+      <button class="btn ghost block" style="margin-top:12px" onclick="closeModal();openCustomerForm(${c.id})">Sửa thông tin</button>`);
+  }
+
+  if(m.type==="debtPayment"){
+    const c=customer(m.customerId);return sheet("Thu công nợ",`
+      <div class="notice">${esc(c.name)} đang nợ <b>${money(c.debt)}</b>.</div>
+      <div class="field" style="margin-top:12px"><label>Số tiền thu</label><input id="dp_amount" type="number" value="${m.amount}" max="${c.debt}"></div>
+      <div class="field"><label>Phương thức</label><select id="dp_method"><option>Tiền mặt</option><option>Chuyển khoản</option></select></div>
+      <button class="btn success block" onclick="saveDebtPayment()">XÁC NHẬN THU TIỀN</button>`);
+  }
+
+  if(m.type==="imeiDetail"){
+    const i=m.i,p=product(i.productId),c=customer(i.customerId),inv=invoice(i.invoiceId),ws=db.warranties.filter(w=>w.imei===i.value);
+    return sheet("Chi tiết IMEI / Serial",`
+      <div class="card"><div class="small muted">IMEI / SERIAL</div><h3 class="mono">${esc(i.value)}</h3><span class="badge ${i.status==="Trong kho"?"green":"orange"}">${esc(i.status)}</span></div>
+      <div class="info-grid" style="margin-top:10px"><div class="info-box"><div class="k">SẢN PHẨM</div><div class="v">${esc(p?.name||"")}</div></div><div class="info-box"><div class="k">KHÁCH HÀNG</div><div class="v">${esc(c?.name||"—")}</div></div><div class="info-box"><div class="k">HÓA ĐƠN</div><div class="v">${esc(inv?.code||"—")}</div></div><div class="info-box"><div class="k">HẠN BH</div><div class="v">${fmtDate(i.warrantyEnd)}</div></div></div>
+      <div class="section-title">Vòng đời thiết bị</div><div class="timeline">
+        <div class="tl"><b>Nhập kho</b><div class="small muted">${fmtDateTime(i.receivedDate)}</div></div>
+        ${i.soldDate?`<div class="tl"><b>Đã bán${inv?` • ${inv.code}`:""}</b><div class="small muted">${fmtDateTime(i.soldDate)}${c?` • ${esc(c.name)}`:""}</div></div>`:""}
+        ${ws.map(w=>`<div class="tl"><b>Bảo hành • ${w.code}</b><div class="small muted">${fmtDateTime(w.date)} • ${esc(w.status)}</div></div>`).join("")}
+      </div>
+      ${i.status!=="Trong kho"?`<button class="btn primary block" onclick="closeModal();openWarrantyForm('${esc(i.value)}')">＋ TẠO PHIẾU BẢO HÀNH</button>`:""}`);
+  }
+
+  if(m.type==="stockReceipt"){
+    return sheet("Phiếu nhập hàng",`
+      <div class="field"><label>Nhà cung cấp</label><input id="sr_supplier" value="${esc(m.supplier||"")}" oninput="state.modal.supplier=this.value"></div>
+      <div class="field"><label>Quét / nhập barcode</label><div class="searchrow" style="margin:0"><input id="sr_code" placeholder="Barcode / SKU" onkeydown="if(event.key==='Enter'){addStockByCode();this.value=''}"><button class="btn accent" onclick="openScanner('stockContinuous',null,true)">📷 Quét liên tục</button></div></div>
+      <div class="list">${m.items.map(it=>{const p=product(it.productId),count=it.imeis?.length||0;return `<div class="item"><div class="item-main"><div class="item-title">${esc(p.name)}</div><div class="item-sub">${esc(p.barcode||p.sku)}</div>${p.imeiEnabled?`<button class="btn ${count===it.qty?"success":"ghost"} small" style="margin-top:7px" onclick="openStockImeis(${p.id})">🔢 IMEI ${count}/${it.qty}</button>`:""}</div><div class="qty"><button onclick="changeStockQty(${p.id},-1)">−</button><b>${it.qty}</b><button onclick="changeStockQty(${p.id},1)">＋</button></div></div>`}).join("")||'<div class="empty">Chưa có sản phẩm. Quét mã để nhận hàng.</div>'}</div>
+      <div class="field" style="margin-top:12px"><label>Ghi chú</label><textarea id="sr_note" rows="2" oninput="state.modal.note=this.value">${esc(m.note||"")}</textarea></div>
+      <button class="btn success block" onclick="finishStockReceipt()">HOÀN TẤT NHẬP HÀNG</button>`);
+  }
+
+  if(m.type==="stockImeis"){
+    const receipt=m.receipt,it=receipt.items.find(x=>x.productId===m.productId),p=product(m.productId);
+    return sheet(`Nhập IMEI • ${p.name}`,`
+      <div class="notice">Số lượng nhập: <b>${it.qty}</b> • Đã nhập IMEI: <b>${m.imeis.length}/${it.qty}</b></div>
+      <div class="searchrow"><input id="si_value" class="mono" placeholder="IMEI / Serial" onkeydown="if(event.key==='Enter')addStockImeiManual()"><button class="btn accent" onclick="openScanner('imeiContinuous',${m.productId},true)">📷 Liên tục</button><button class="btn primary" onclick="addStockImeiManual()">＋</button></div>
+      <div class="taglist">${m.imeis.map((v,i)=>`<span class="imei-tag mono">${esc(v)} <button style="border:0;background:transparent" onclick="removeStockImei(${i})">×</button></span>`).join("")}</div>
+      <div class="field" style="margin-top:12px"><label>Dán nhiều IMEI, mỗi dòng một mã</label><textarea id="si_bulk" rows="5" placeholder="IMEI001&#10;IMEI002&#10;IMEI003"></textarea></div>
+      <button class="btn ghost block" onclick="addBulkStockImeis()">Thêm danh sách trên</button>
+      <button class="btn primary block" style="margin-top:9px" onclick="saveStockImeis()">LƯU IMEI</button>`);
+  }
+
+  if(m.type==="warrantyForm"){
+    const d=m.draft;
+    return sheet("Tiếp nhận bảo hành",`
+      <div class="field"><label>IMEI / Serial *</label><div class="searchrow" style="margin:0"><input id="wf_imei" class="mono" value="${esc(d.imei||"")}" onchange="lookupWarrantyImei()"><button class="btn accent" onclick="openScanner('warrantyForm')">📷</button><button class="btn ghost" onclick="lookupWarrantyImei()">Tra</button></div></div>
+      ${d.productName?`<div class="notice"><b>${esc(d.productName)}</b><br>${esc(d.invoiceCode||"Không có hóa đơn")} • ${esc(d.warrantyText||"")}</div>`:""}
+      <div class="form-row" style="margin-top:12px"><div class="field"><label>Tên khách</label><input id="wf_customer" value="${esc(d.customerName||"")}"></div><div class="field"><label>SĐT</label><input id="wf_phone" value="${esc(d.phone||"")}"></div></div>
+      <div class="field"><label>Lỗi khách báo</label><textarea id="wf_issue" rows="4">${esc(d.issue||"")}</textarea></div>
+      <div class="field"><label>Trạng thái</label><select id="wf_status">${["Mới tiếp nhận","Đang kiểm tra","Đang sửa","Chờ linh kiện","Hoàn thành","Đã trả khách","Hủy"].map(x=>`<option ${x===d.status?"selected":""}>${x}</option>`).join("")}</select></div>
+      <button class="btn primary block" onclick="saveWarranty()">TẠO PHIẾU BẢO HÀNH</button>`);
+  }
+
+  if(m.type==="warrantyDetail"){
+    const w=m.w;return sheet(w.code,`
+      <div class="card"><div class="small muted">IMEI</div><b class="mono">${esc(w.imei)}</b><hr><div class="small muted">Sản phẩm</div><b>${esc(w.productName||"")}</b><hr><div class="small muted">Khách hàng</div><b>${esc(w.customerName||"")}</b><hr><div class="small muted">Lỗi khách báo</div><b>${esc(w.issue||"")}</b></div>
+      <div class="field" style="margin-top:12px"><label>Cập nhật trạng thái</label><select onchange="updateWarrantyStatus(${w.id},this.value)">${["Mới tiếp nhận","Đang kiểm tra","Đang sửa","Chờ linh kiện","Hoàn thành","Đã trả khách","Hủy"].map(x=>`<option ${x===w.status?"selected":""}>${x}</option>`).join("")}</select></div><div class="split-buttons"><button class="btn ghost" onclick="previewTemplate('warranty_k80','warranty',${w.id})">Xem K80</button><button class="btn primary" onclick="previewTemplate('warranty_a4','warranty',${w.id})">Xem A4</button></div>`);
+  }
+
+  if(m.type==="invoiceDetail"){
+    const inv=m.inv,c=customer(inv.customerId);
+    return sheet(inv.code,`
+      <div class="info-grid"><div class="info-box"><div class="k">TỔNG TIỀN</div><div class="v">${money(inv.total)}</div></div><div class="info-box"><div class="k">CÒN NỢ</div><div class="v ${inv.debt?"danger-text":""}">${money(inv.debt)}</div></div><div class="info-box"><div class="k">KHÁCH</div><div class="v">${esc(c?.name||"Khách lẻ")}</div></div><div class="info-box"><div class="k">THANH TOÁN</div><div class="v">${esc(inv.paymentMethod||"")}</div></div></div>
+      <div class="section-title">Sản phẩm</div><div class="list">${(inv.items||[]).map(it=>{const p=product(it.productId);return `<div class="item"><div class="item-main"><b>${esc(p?.name||"")}</b><div class="small muted">${it.qty} × ${money(it.price)}</div>${it.imeis?.length?`<div class="taglist" style="margin-top:6px">${it.imeis.map(id=>`<span class="imei-tag mono">${esc(imeiObj(id)?.value||"")}</span>`).join("")}</div>`:""}</div><b>${money(it.qty*it.price)}</b></div>`}).join("")}</div>
+      <div class="small muted" style="margin-top:12px">${fmtDateTime(inv.date)} • ${esc(inv.status||"")}</div><div class="split-buttons" style="margin-top:12px"><button class="btn ghost" onclick="previewTemplate('sale_k80','invoice',${inv.id})">Xem K80</button><button class="btn primary" onclick="previewTemplate('sale_a4','invoice',${inv.id})">Xem A4</button></div>`);
+  }
+
+
+
+  if(m.type==="templateEditor"){const tpl=m.tpl,labels=tpl.docType==="sale"?{store:"Tên cửa hàng",address:"Địa chỉ",phone:"Hotline",code:"Mã hóa đơn",date:"Ngày bán",customer:"Khách hàng",items:"Danh sách sản phẩm",total:"Tổng thanh toán",payment:"Phương thức thanh toán",warranty:"Bảo hành",qr:"QR hỗ trợ",signature:"Chữ ký"}:{store:"Tên cửa hàng",address:"Địa chỉ",phone:"Hotline",code:"Mã phiếu",date:"Ngày tiếp nhận",customer:"Khách hàng",product:"Sản phẩm",imei:"IMEI/Serial",issue:"Lỗi tiếp nhận",warrantyTerm:"Thời hạn bảo hành",qr:"QR hỗ trợ",signature:"Chữ ký"},sample=tpl.docType==="sale"?sampleSaleDoc():sampleWarrantyDoc();return sheet("Chỉnh mẫu in",`<div class="field"><label>Tên mẫu</label><input id="tpl_name" value="${esc(tpl.name)}"></div><div class="field"><label>Mô tả</label><input id="tpl_desc" value="${esc(tpl.desc||"")}"></div><div class="checklist">${Object.keys(labels).map(k=>`<label class="checkrow"><input type="checkbox" ${tpl.fields[k]?"checked":""} onchange="toggleTplField('${k}')"><div>${labels[k]}</div></label>`).join("")}</div><div class="section-title">Review trực tiếp</div><div class="preview-shell"><div class="template-preview">${renderPrintContent(tpl,sample)}</div></div><div class="split-buttons" style="margin-top:12px"><button class="btn ghost" onclick="previewTemplate('${tpl.id}')">Preview lớn</button><button class="btn primary" onclick="saveTemplateEditor()">LƯU MẪU</button></div>`)}
+  if(m.type==="printPreview"){return sheet("Xem trước mẫu in",`<div class="row-between"><span class="template-chip">${m.tpl.paper}</span><b>${esc(m.tpl.name)}</b></div><div class="preview-shell" style="margin-top:12px"><div class="template-preview">${renderPrintContent(m.tpl,m.doc)}</div></div><div class="split-buttons" style="margin-top:12px"><button class="btn ghost" onclick="openTemplateEditor('${m.tpl.id}')">CHỈNH MẪU</button><button class="btn primary" onclick="printCurrentTemplate()">IN NGAY</button></div>`)}
+
+  if(m.type==="crmForm"){
+    const c=m.c;
+    return sheet(m.editing?"Sửa khách CRM":"Thêm khách CRM",`
+      <div class="field"><label>Họ tên *</label><input id="crmf_name" value="${esc(c.name)}"></div>
+      <div class="field"><label>Số điện thoại</label><input id="crmf_phone" value="${esc(c.phone||"")}"></div>
+      <div class="field"><label>Tình trạng khách</label><select id="crmf_status">${["Khách mới","Chưa liên hệ","Đã liên hệ","Đang tư vấn","Hẹn gọi lại","Đang báo giá","Đang cân nhắc","Đã mua hàng","Không mua"].map(x=>`<option ${x===c.status?"selected":""}>${x}</option>`).join("")}</select></div>
+      <div class="field"><label>Khách cần gì?</label><textarea id="crmf_need" rows="3" placeholder="VD: Máy POS SUNMI D2 + máy in bill">${esc(c.need||"")}</textarea></div>
+      <div class="field"><label>Ngân sách dự kiến</label><input id="crmf_budget" value="${esc(c.budget||"")}" placeholder="VD: 7–8 triệu"></div>
+      <div class="form-row"><div class="field"><label>Care tiếp theo</label><input id="crmf_next" type="datetime-local" value="${c.nextCareAt?new Date(c.nextCareAt).toISOString().slice(0,16):""}"></div><div class="field"><label>Kênh care</label><select id="crmf_channel">${["Gọi điện","Zalo","Facebook","Email","Gặp trực tiếp"].map(x=>`<option ${x===c.careChannel?"selected":""}>${x}</option>`).join("")}</select></div></div>
+      <div class="field"><label>Ghi chú</label><textarea id="crmf_note" rows="3">${esc(c.note||"")}</textarea></div>
+      <button class="btn primary block" onclick="saveCrmCustomer()">LƯU KHÁCH CRM</button>`);
+  }
+  if(m.type==="crmDetail"){
+    const c=m.c,h=c.careHistory||[];
+    return sheet(c.name,`
+      <div class="crm-hero"><div class="row-between"><div><b>${esc(c.status)}</b><div class="small muted">${esc(c.phone||"")}</div></div><span class="crm-status">${esc(c.careChannel||"")}</span></div>
+      <div style="margin-top:10px"><b>Nhu cầu:</b> ${esc(c.need||"Chưa ghi")}</div><div style="margin-top:6px"><b>Ngân sách:</b> ${esc(c.budget||"Chưa ghi")}</div>
+      <div class="crm-next">Care tiếp: <b>${c.nextCareAt?fmtDateTime(c.nextCareAt):"Chưa đặt"}</b></div></div>
+      <div class="split-buttons" style="margin-top:10px"><button class="btn primary" onclick="addCareLog(${c.id})">＋ GHI NHẬT KÝ CARE</button><button class="btn ghost" onclick="closeModal();openCrmCustomerForm(${c.id})">SỬA KHÁCH</button></div>
+      <div class="section-title">Lịch sử chăm sóc</div><div class="timeline">${h.map(x=>`<div class="tl"><b>${esc(x.result||"Care khách")}</b><div>${esc(x.note||"")}</div><div class="small muted">${fmtDateTime(x.date)} • ${esc(x.channel||"")}${x.nextCareAt?` • Hẹn lại ${fmtDateTime(x.nextCareAt)}`:""}</div></div>`).join("")||'<div class="empty">Chưa có lịch sử care.</div>'}</div>`);
+  }
+  if(m.type==="careLog"){
+    const c=m.c;
+    return sheet("Ghi nhận care khách",`
+      <div class="notice">${esc(c.name)} • ${esc(c.phone||"")}</div>
+      <div class="field" style="margin-top:12px"><label>Kênh liên hệ</label><select id="care_channel">${["Gọi điện","Zalo","Facebook","Email","Gặp trực tiếp"].map(x=>`<option>${x}</option>`).join("")}</select></div>
+      <div class="field"><label>Kết quả / trạng thái mới</label><select id="care_result">${["Đã liên hệ","Đang tư vấn","Hẹn gọi lại","Đang báo giá","Đang cân nhắc","Đã mua hàng","Không mua"].map(x=>`<option>${x}</option>`).join("")}</select></div>
+      <div class="field"><label>Nội dung trao đổi</label><textarea id="care_note" rows="4" placeholder="Khách phản hồi gì, cần gì thêm..."></textarea></div>
+      <div class="field"><label>Care tiếp theo</label><input id="care_next" type="datetime-local"></div>
+      <button class="btn primary block" onclick="saveCareLog()">LƯU NHẬT KÝ CARE</button>`);
+  }
+  if(m.type==="scanner"){
+    return sheet(state.scannerContinuous?"Quét liên tục":"Quét mã",`
+      <div class="camera-box"><video id="scannerVideo" playsinline muted></video></div>
+      <div id="scannerMsg" class="notice" style="margin-top:10px">${state.scannerContinuous?"Giữ camera mở. Mỗi mã hợp lệ sẽ tự nhận và đánh dấu hoàn thành. Mã trùng sẽ không cộng lại.":"Đưa barcode / QR / IMEI vào giữa camera."}</div>
+      ${state.scannerContinuous?`<div id="scanFeed" class="scan-feed">${state.scanFeed.map(x=>`<div class="scan-row"><div><div class="scan-code">${esc(x.code)}</div></div><div class="${x.status==="Hoàn thành"?"scan-ok":x.status==="Trùng"?"scan-dup":"danger-text"}">${x.status==="Hoàn thành"?"✓ Đã nhận":x.status}</div></div>`).join("")}</div><button class="btn primary block" style="margin-top:12px" onclick="finishContinuousScan()">HOÀN THÀNH QUÉT</button>`:
+      `<div class="field" style="margin-top:12px"><label>Hoặc nhập mã thủ công</label><input id="scannerManual" class="mono" placeholder="Barcode / IMEI / Serial"></div><button class="btn primary block" onclick="acceptScan()">XÁC NHẬN MÃ</button>`}
+    `);
+  }
+
+  return "";
+}
+window.addBulkStockImeis=()=>{
+  const text=$("#si_bulk").value;
+  const vals=text.split(/\r?\n|,|;/).map(x=>x.trim()).filter(Boolean);
+  for(const v of vals){
+    const m=state.modal,receipt=m.receipt,it=receipt.items.find(x=>x.productId===m.productId);
+    if(m.imeis.length>=it.qty)break;
+    if(!m.imeis.includes(v)&&!db.imeis.some(i=>i.value===v))m.imeis.push(v);
+  }
+  render();
+}
+
+/* ================= UTILS / RENDER ================= */
+function toast(msg){
+  const t=document.createElement("div");t
