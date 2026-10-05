@@ -73,6 +73,11 @@
       const desktopProScript = document.createElement("script");
       desktopProScript.textContent = desktopProCode;
       document.body.appendChild(desktopProScript);
+
+      const desktopProFixCode = await fetchText("desktop/pro-fix.js");
+      const desktopProFixScript = document.createElement("script");
+      desktopProFixScript.textContent = desktopProFixCode;
+      document.body.appendChild(desktopProFixScript);
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
