@@ -1,0 +1,68 @@
+/* KPOS responsive Web/Desktop UI - dùng chung dữ liệu với Mobile */
+@media (min-width: 980px){
+  :root{--desk-side:252px;--desk-bg:#f7f8fa;--desk-line:#e5e7eb;--desk-orange:#f97316;--desk-text:#111827;--desk-muted:#6b7280}
+  html,body{background:var(--desk-bg);min-height:100%;}
+  body.kpos-desktop{overflow-x:hidden;}
+  body.kpos-desktop #app{min-height:100vh;background:var(--desk-bg);}
+  body.kpos-desktop .bottomnav{display:none!important;}
+  body.kpos-desktop .fab{right:30px;bottom:28px;}
+
+  .desktop-sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--desk-side);background:#111827;color:#fff;z-index:60;display:flex;flex-direction:column;padding:18px 14px;box-sizing:border-box;box-shadow:8px 0 30px rgba(17,24,39,.08)}
+  .desktop-brand{display:flex;align-items:center;gap:11px;padding:5px 8px 18px;border-bottom:1px solid rgba(255,255,255,.10);margin-bottom:10px}
+  .desktop-brand-mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--desk-orange);font-weight:900;font-size:19px;color:#fff;box-shadow:0 8px 18px rgba(249,115,22,.28)}
+  .desktop-brand-name{font-size:17px;font-weight:900;line-height:1.15}.desktop-brand-sub{font-size:11px;color:#9ca3af;margin-top:3px}
+  .desktop-nav-scroll{overflow:auto;padding-right:2px;flex:1}
+  .desktop-nav-group{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#6b7280;font-weight:800;padding:13px 10px 7px}
+  .desktop-nav-btn{width:100%;border:0;background:transparent;color:#d1d5db;display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;text-align:left;font-size:13px;font-weight:700;cursor:pointer;margin:2px 0;transition:.16s ease}
+  .desktop-nav-btn:hover{background:#1f2937;color:#fff}.desktop-nav-btn.active{background:#fff7ed;color:#fb923c}.desktop-nav-btn .ico{width:22px;text-align:center;font-size:17px}
+  .desktop-sidebar-foot{border-top:1px solid rgba(255,255,255,.10);padding-top:10px;margin-top:8px}.desktop-cloud{font-size:11px;color:#9ca3af;padding:4px 10px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .desktop-topbar{margin-left:var(--desk-side);min-height:76px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--desk-line);display:flex;align-items:center;justify-content:space-between;padding:12px 28px;box-sizing:border-box;position:sticky;top:0;z-index:40;backdrop-filter:blur(12px)}
+  .desktop-topbar h1{font-size:22px;margin:0;color:var(--desk-text);line-height:1.2}.desktop-topbar .desktop-subtitle{font-size:12px;color:var(--desk-muted);margin-top:4px}
+  .desktop-top-actions{display:flex;align-items:center;gap:9px}.desktop-sync-pill{border:1px solid #fed7aa;background:#fff7ed;color:#c2410c;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer}.desktop-avatar{width:38px;height:38px;border-radius:12px;background:#111827;color:#fff;display:grid;place-items:center;font-weight:900}
+
+  body.kpos-desktop .content{margin-left:var(--desk-side);max-width:none!important;width:auto!important;padding:24px 28px 42px!important;box-sizing:border-box;}
+  body.kpos-desktop .content>.grid.two{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  body.kpos-desktop .content>.actions{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  body.kpos-desktop .card{border-color:#e5e7eb;box-shadow:0 1px 2px rgba(15,23,42,.03)}
+  body.kpos-desktop .section-title{margin-top:22px;margin-bottom:9px;font-size:13px}
+  body.kpos-desktop .searchrow{max-width:none;gap:9px}
+  body.kpos-desktop .searchrow input{height:42px}
+  body.kpos-desktop .toolbar{display:flex;gap:8px;margin:10px 0 14px}
+
+  .desktop-table-head{display:grid;grid-template-columns:minmax(280px,1fr) minmax(210px,.8fr) 180px;gap:16px;padding:10px 16px;border:1px solid var(--desk-line);border-bottom:0;background:#f9fafb;border-radius:13px 13px 0 0;color:#6b7280;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+  .desktop-table-head>div:last-child{text-align:right}
+  body.kpos-desktop .desktop-managed-list{gap:0!important;border:1px solid var(--desk-line);border-radius:0 0 13px 13px;overflow:hidden;background:#fff}
+  body.kpos-desktop .desktop-managed-list>.item{border:0!important;border-radius:0!important;border-bottom:1px solid #eef0f2!important;margin:0!important;min-height:70px;padding:10px 16px!important;background:#fff;box-shadow:none!important}
+  body.kpos-desktop .desktop-managed-list>.item:last-child{border-bottom:0!important}
+  body.kpos-desktop .desktop-managed-list>.item:hover{background:#fffaf7}
+  body.kpos-desktop .desktop-managed-list .thumb{width:48px;height:48px;border-radius:10px}
+  body.kpos-desktop .desktop-managed-list .item-main{min-width:0}
+  body.kpos-desktop .desktop-managed-list .item-title{font-size:13px}.desktop-managed-list .item-sub,.desktop-managed-list .small{font-size:11px}
+
+  /* POS desktop: sản phẩm bên trái, giỏ hàng bên phải, không phải cuộn cả trang để thanh toán */
+  .desktop-pos-shell{margin-left:var(--desk-side);height:calc(100vh - 76px);display:grid;grid-template-columns:minmax(0,1fr) 390px;background:var(--desk-bg);overflow:hidden}
+  .desktop-pos-products{padding:18px 20px 24px;overflow:auto;min-width:0}
+  .desktop-pos-toolbar{display:flex;gap:9px;align-items:center;margin-bottom:14px}.desktop-pos-toolbar .searchrow{margin:0;flex:1}.desktop-pos-toolbar .btn{white-space:nowrap}
+  .desktop-product-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px!important;align-content:start}
+  .desktop-product-grid>.item{position:relative;display:block!important;border:1px solid #e5e7eb!important;background:#fff;border-radius:14px!important;padding:12px!important;min-height:172px;box-shadow:0 1px 2px rgba(15,23,42,.03);transition:.15s ease}
+  .desktop-product-grid>.item:hover{border-color:#fdba74!important;box-shadow:0 8px 22px rgba(15,23,42,.07);transform:translateY(-1px)}
+  .desktop-product-grid>.item>.thumb{width:58px;height:58px;border-radius:12px;margin-bottom:10px;object-fit:cover}.desktop-product-grid>.item>.item-main{padding-right:0!important}.desktop-product-grid .item-title{font-size:13px;min-height:34px}.desktop-product-grid .price{font-size:16px;margin-top:6px}.desktop-product-grid>.item>.btn{position:absolute;right:12px;bottom:12px}
+  .desktop-product-grid .imei-flag{font-size:10px;margin-top:5px}
+  .desktop-cart-panel{background:#fff;border-left:1px solid var(--desk-line);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .desktop-cart-head{padding:16px 16px 12px;border-bottom:1px solid #eef0f2}.desktop-cart-title{font-size:16px;font-weight:900}.desktop-cart-meta{font-size:11px;color:#6b7280;margin-top:3px}
+  .desktop-customer-box{margin:11px 14px 0;border:1px solid #fed7aa;background:#fffaf7;border-radius:12px;padding:11px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .desktop-cart-scroll{padding:10px 14px;overflow:auto;flex:1}.desktop-cart-scroll .list{gap:8px}.desktop-cart-scroll .item{padding:10px;border:1px solid #e5e7eb;box-shadow:none}.desktop-cart-scroll .item-title{font-size:12px}.desktop-cart-scroll .qty button{width:28px;height:28px}
+  .desktop-cart-empty{height:100%;display:grid;place-items:center;text-align:center;color:#9ca3af;padding:30px;font-size:13px}
+  .desktop-cart-total{border-top:1px solid #e5e7eb;padding:13px 15px 16px;background:#fff}.desktop-total-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:11px}.desktop-total-row .amount{font-size:23px;font-weight:900;color:#ea580c}.desktop-total-row .qtysum{font-size:11px;color:#6b7280}
+
+  body.kpos-desktop .template-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  body.kpos-desktop .template-card{min-height:150px}
+  body.kpos-desktop .modal-backdrop{padding-left:var(--desk-side);align-items:center!important;justify-content:center}.modal-backdrop .sheet{width:min(760px,calc(100vw - var(--desk-side) - 60px));max-height:88vh;border-radius:20px!important;margin:0!important;overflow:auto}
+  body.kpos-desktop .photo-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  body.kpos-desktop .form-row{grid-template-columns:1fr 1fr}
+
+  .desktop-only{display:block!important}.mobile-only{display:none!important}
+}
+
+@media (max-width:979px){.desktop-sidebar,.desktop-topbar,.desktop-only{display:none!important}}
