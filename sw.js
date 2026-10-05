@@ -1,10 +1,10 @@
-const CACHE="kpos-mobile-v8-1";
+const CACHE="kpos-mobile-v8-2";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
   "./supabase/config.js",
   "./v6/css-00.txt",
   "./v6/app-00.txt","./v6/app-01.txt","./v6/app-02.txt","./v6/app-03.txt","./v6/app-04.txt","./v6/app-05.txt",
-  "./v7/patch.js","./v8/patch.js"
+  "./v7/patch.js","./v8/patch.js","./v8/diagnostics.js"
 ];
 self.addEventListener("install",event=>{
   self.skipWaiting();
