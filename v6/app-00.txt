@@ -1,0 +1,157 @@
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const DBKEY = "kpos_mobile_v2";
+const OLDKEY = "kpos_mobile_v1";
+const sessionKey = "kpos_session";
+const clone = x => JSON.parse(JSON.stringify(x));
+
+
+function defaultPrintTemplates(){
+  return [
+    {id:"sale_k80",docType:"sale",paper:"K80",name:"Hóa đơn bán hàng K80",desc:"Gọn, rõ, phù hợp máy in nhiệt 80mm.",fields:{store:true,address:true,phone:true,code:true,date:true,customer:true,items:true,total:true,payment:true,warranty:true,qr:true,signature:false}},
+    {id:"sale_a4",docType:"sale",paper:"A4",name:"Hóa đơn bán hàng A4",desc:"Đầy đủ thông tin, bảng sản phẩm và chữ ký.",fields:{store:true,address:true,phone:true,code:true,date:true,customer:true,items:true,total:true,payment:true,warranty:true,qr:false,signature:true}},
+    {id:"warranty_k80",docType:"warranty",paper:"K80",name:"Phiếu bảo hành K80",desc:"Phiếu nhỏ gọn, có IMEI/Serial và tình trạng tiếp nhận.",fields:{store:true,address:true,phone:true,code:true,date:true,customer:true,product:true,imei:true,issue:true,warrantyTerm:true,qr:true,signature:true}},
+    {id:"warranty_a4",docType:"warranty",paper:"A4",name:"Phiếu bảo hành A4",desc:"Mẫu bảo hành đầy đủ, dễ ký nhận và lưu hồ sơ.",fields:{store:true,address:true,phone:true,code:true,date:true,customer:true,product:true,imei:true,issue:true,warrantyTerm:true,qr:false,signature:true}}
+  ];
+}
+
+const seed = {
+  version: 2,
+  products: [
+    {id:1,name:"Máy POS SUNMI D2",short:"SUNMI D2",keywords:"sunmi,pos,máy tính tiền",sku:"SUNMID2",barcode:"893100000001",cost:5000000,price:5800000,stock:3,minStock:1,imeiEnabled:true,warranty:12,images:[]},
+    {id:2,name:"Máy in HPRT TP80N-M",short:"TP80N-M",keywords:"hprt,máy in bill",sku:"TP80NM",barcode:"893100000002",cost:720000,price:850000,stock:8,minStock:2,imeiEnabled:false,warranty:12,images:[]},
+    {id:3,name:"Giấy in bill K80x45",short:"K80x45",keywords:"giấy in,bill,k80",sku:"K8045",barcode:"893100000003",cost:6000,price:9000,stock:60,minStock:20,imeiEnabled:false,warranty:0,images:[]}
+  ],
+  customers: [
+    {id:1,name:"Nguyễn Văn A",phone:"0900000001",phone2:"",email:"",address:"",source:"Khách cũ",status:"Đã mua hàng",total:0,debt:0,note:"Khách mẫu"},
+    {id:2,name:"Trần Minh B",phone:"0900000002",phone2:"",email:"",address:"",source:"Facebook",status:"Đang tư vấn",total:0,debt:0,note:"Quan tâm máy in bill"}
+  ],
+  imeis: [
+    {id:101,productId:1,value:"SUNMID2-0001",status:"Trong kho",stockReceiptId:null,customerId:null,invoiceId:null,receivedDate:new Date().toISOString(),soldDate:null,warrantyStart:null,warrantyEnd:null},
+    {id:102,productId:1,value:"SUNMID2-0002",status:"Trong kho",stockReceiptId:null,customerId:null,invoiceId:null,receivedDate:new Date().toISOString(),soldDate:null,warrantyStart:null,warrantyEnd:null},
+    {id:103,productId:1,value:"SUNMID2-0003",status:"Trong kho",stockReceiptId:null,customerId:null,invoiceId:null,receivedDate:new Date().toISOString(),soldDate:null,warrantyStart:null,warrantyEnd:null}
+  ],
+  warranties: [],
+  invoices: [],
+  stockReceipts: [],
+  payments: [],
+  printTemplates: defaultPrintTemplates(),
+  inventoryMovements: [
+    {id:1,date:new Date().toISOString(),type:"OPENING",code:"TONDAU",productId:1,qty:3,balance:3,note:"Tồn đầu"},
+    {id:2,date:new Date().toISOString(),type:"OPENING",code:"TONDAU",productId:2,qty:8,balance:8,note:"Tồn đầu"},
+    {id:3,date:new Date().toISOString(),type:"OPENING",code:"TONDAU",productId:3,qty:60,balance:60,note:"Tồn đầu"}
+  ],
+  cart: [],
+  activities: [
+    {time:"Hôm nay",text:"KPOS Mobile V6 sẵn sàng"},
+    {time:"Hôm nay",text:"IMEI liên kết kho → bán hàng → khách → bảo hành"}
+  ]
+};
+
+function normalizeDB(raw){
+  const out = {...clone(seed), ...raw};
+  out.version = 2;
+  ["products","customers","imeis","warranties","invoices","stockReceipts","payments","inventoryMovements","cart","activities","printTemplates"].forEach(k=>{
+    if(!Array.isArray(out[k])) out[k]=[];
+  });
+  out.products = out.products.map(p=>({
+    keywords:"",images:[],minStock:0,warranty:0,imeiEnabled:false,stock:0,cost:0,price:0,...p
+  }));
+  out.customers = out.customers.map(c=>({
+    phone2:"",email:"",address:"",source:"",status:"Khách mới",total:0,debt:0,note:"",need:"",budget:"",nextCareAt:"",lastCareAt:"",careChannel:"Gọi điện",careHistory:[],...c
+  }));
+  out.imeis = out.imeis.map(i=>({
+    stockReceiptId:null,customerId:null,invoiceId:null,receivedDate:null,soldDate:null,warrantyStart:null,warrantyEnd:null,...i
+  }));
+  out.printTemplates = (out.printTemplates||[]).length ? out.printTemplates : defaultPrintTemplates();
+  out.cart = [];
+  return out;
+}
+
+function loadDB(){
+  try{
+    const v2 = localStorage.getItem(DBKEY);
+    if(v2) return normalizeDB(JSON.parse(v2));
+    const old = localStorage.getItem(OLDKEY);
+    if(old){
+      const migrated = normalizeDB(JSON.parse(old));
+      localStorage.setItem(DBKEY, JSON.stringify(migrated));
+      return migrated;
+    }
+  }catch(e){}
+  return clone(seed);
+}
+let db = loadDB();
+function saveDB(){ localStorage.setItem(DBKEY, JSON.stringify(db)); }
+
+const state = {
+  screen:"dashboard", modal:null, scanTarget:null, scanReturn:null, scanContext:null,
+  activeCustomer:null, invoiceFilter:"all", imeiFilter:"all", scannerContinuous:false, scanFeed:[], printDocType:"sale"
+};
+
+function money(n){return (Number(n)||0).toLocaleString("vi-VN")+"đ"}
+function fmtDate(d=new Date()){
+  if(!d) return "—";
+  return new Intl.DateTimeFormat("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date(d));
+}
+function fmtDateTime(d){
+  if(!d) return "—";
+  return new Intl.DateTimeFormat("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}).format(new Date(d));
+}
+function addMonths(date,months){
+  const d=new Date(date); d.setMonth(d.getMonth()+Number(months||0)); return d.toISOString();
+}
+function code(prefix, collection=[]){
+  const d=new Date(), pad=n=>String(n).padStart(2,"0");
+  const date=pad(d.getDate())+pad(d.getMonth()+1)+String(d.getFullYear()).slice(-2);
+  const list=collection.filter(x=>String(x.code||"").startsWith(prefix+date));
+  return `${prefix}${date}-${String(list.length+1).padStart(3,"0")}`;
+}
+function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function product(id){return db.products.find(p=>p.id===id)}
+function customer(id){return db.customers.find(c=>c.id===id)}
+function imeiObj(id){return db.imeis.find(i=>i.id===id)}
+function invoice(id){return db.invoices.find(i=>i.id===id)}
+function findProductByCode(v){
+  v=String(v||"").trim().toLowerCase();
+  return db.products.find(p=>[p.barcode,p.sku,p.name,p.short].some(x=>String(x||"").toLowerCase()===v));
+}
+function availableImeis(productId){
+  return db.imeis.filter(i=>i.productId===productId && i.status==="Trong kho");
+}
+function customerDebt(id){
+  const c=customer(id); return c?.debt||0;
+}
+function addActivity(text){db.activities.unshift({time:"Vừa xong",text})}
+function addMovement(productId, qty, type, codeValue, note=""){
+  const p=product(productId);
+  db.inventoryMovements.unshift({
+    id:Date.now()+Math.random(), date:new Date().toISOString(), type, code:codeValue,
+    productId, qty, balance:p?.stock||0, note
+  });
+}
+
+const storeProfile={name:"CÔNG TY TNHH PHẦN MỀM KPOS",short:"KPOS",address:"Hồ Chí Minh",phone:"",website:""};
+function getTemplates(type){return db.printTemplates.filter(t=>t.docType===type)}
+function getTemplate(id){return db.printTemplates.find(t=>t.id===id)}
+function sampleSaleDoc(){return {code:"HD061026-001",date:new Date().toISOString(),customerName:"Nguyễn Văn A",customerPhone:"0901234567",paymentMethod:"Chuyển khoản",subtotal:6650000,discount:100000,surcharge:0,total:6550000,paid:6550000,debt:0,items:[{name:"Máy POS SUNMI D2",qty:1,price:5800000,imeis:["SUNMID2-0001"],warranty:"12 tháng"},{name:"Máy in HPRT TP80N-M",qty:1,price:850000,imeis:[],warranty:"12 tháng"}]}}
+function sampleWarrantyDoc(){return {code:"BH061026-001",date:new Date().toISOString(),customerName:"Nguyễn Văn A",customerPhone:"0901234567",productName:"Máy POS SUNMI D2",imei:"SUNMID2-0001",issue:"Không lên nguồn",warrantyTerm:"12 tháng • đến 06/10/2027"}}
+function invoiceToPrintDoc(inv){const c=customer(inv.customerId);return {code:inv.code,date:inv.date,customerName:c?.name||"Khách lẻ",customerPhone:c?.phone||"",paymentMethod:inv.paymentMethod||"",subtotal:(inv.total||0)+(inv.discount||0)-(inv.surcharge||0),discount:inv.discount||0,surcharge:inv.surcharge||0,total:inv.total||0,paid:inv.paid||0,debt:inv.debt||0,items:(inv.items||[]).map(it=>({name:product(it.productId)?.name||"",qty:it.qty,price:it.price,imeis:(it.imeis||[]).map(id=>imeiObj(id)?.value||"").filter(Boolean),warranty:(product(it.productId)?.warranty||0)+" tháng"}))}}
+function warrantyToPrintDoc(w){return {code:w.code,date:w.date,customerName:w.customerName||"",customerPhone:w.phone||"",productName:w.productName||"",imei:w.imei||"",issue:w.issue||"",warrantyTerm:w.warrantyText||""}}
+function renderSalePrint(tpl,doc){const f=tpl.fields||{};if(tpl.paper==="K80")return `<div class="print-doc print-k80">${f.store?`<h2 class="print-orange" style="text-align:center">${storeProfile.short}</h2><div class="print-meta" style="text-align:center">${storeProfile.name}${f.address?`<br>${storeProfile.address}`:""}${f.phone&&storeProfile.phone?`<br>Hotline: ${storeProfile.phone}`:""}</div>`:""}<div class="print-hr"></div><div class="print-title">HÓA ĐƠN BÁN HÀNG</div><div class="print-meta">${f.code?`Mã: <b>${doc.code}</b><br>`:""}${f.date?`Ngày: ${fmtDateTime(doc.date)}<br>`:""}${f.customer?`Khách: ${doc.customerName}${doc.customerPhone?` - ${doc.customerPhone}`:""}<br>`:""}</div><div class="print-hr"></div>${f.items?`<table class="print-items"><thead><tr><th>Sản phẩm</th><th>SL</th><th>Thành tiền</th></tr></thead><tbody>${doc.items.map(it=>`<tr><td>${esc(it.name)}${it.imeis?.length?`<div class="print-note">IMEI/Serial: ${it.imeis.map(esc).join(", ")}</div>`:""}${f.warranty&&it.warranty?`<div class="print-note">BH: ${esc(it.warranty)}</div>`:""}</td><td>${it.qty}</td><td>${money(it.qty*it.price)}</td></tr>`).join("")}</tbody></table>`:""}<div class="print-hr"></div>${f.total?`<div class="print-meta">Tạm tính <b class="print-right">${money(doc.subtotal||doc.total)}</b><br>Giảm giá <b class="print-right">${money(doc.discount||0)}</b><br>Phụ thu <b class="print-right">${money(doc.surcharge||0)}</b><br><b>PHẢI TRẢ</b><b class="print-right print-orange">${money(doc.total)}</b><br>Đã trả <b class="print-right">${money(doc.paid||0)}</b><br>Công nợ <b class="print-right">${money(doc.debt||0)}</b></div>`:""}${f.payment?`<div class="print-hr"></div><div class="print-meta">Thanh toán: <b>${esc(doc.paymentMethod||"Tiền mặt")}</b></div>`:""}${f.qr?`<div class="print-hr"></div><div style="text-align:center;font-size:32px">▣</div><div class="print-meta" style="text-align:center">Quét QR để liên hệ hỗ trợ</div>`:""}</div>`;return `<div class="print-doc print-a4"><div class="print-head"><div><h2 class="print-orange">KPOS</h2><div class="print-meta">${storeProfile.name}${f.address?`<br>${storeProfile.address}`:""}</div></div><div style="text-align:right"><h2>HÓA ĐƠN BÁN HÀNG</h2><div class="print-meta">${f.code?`Mã: <b>${doc.code}</b><br>`:""}${f.date?`Ngày: ${fmtDateTime(doc.date)}`:""}</div></div></div><div class="print-hr"></div>${f.customer?`<div class="print-meta"><b>Khách hàng:</b> ${esc(doc.customerName)}${doc.customerPhone?` - ${esc(doc.customerPhone)}`:""}</div>`:""}${f.items?`<table class="print-table" style="margin-top:12px"><thead><tr><th>#</th><th>Sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>${doc.items.map((it,i)=>`<tr><td>${i+1}</td><td>${esc(it.name)}${it.imeis?.length?`<div class="print-note">IMEI/Serial: ${it.imeis.map(esc).join(", ")}</div>`:""}${f.warranty&&it.warranty?`<div class="print-note">Bảo hành: ${esc(it.warranty)}</div>`:""}</td><td>${it.qty}</td><td>${money(it.price)}</td><td>${money(it.qty*it.price)}</td></tr>`).join("")}</tbody></table>`:""}${f.total?`<div class="print-total">Tạm tính <b>${money(doc.subtotal||doc.total)}</b><br>Giảm giá <b>${money(doc.discount||0)}</b><br>Phụ thu <b>${money(doc.surcharge||0)}</b><br><span>Khách phải trả</span> <b class="print-orange">${money(doc.total)}</b><br>Đã thanh toán <b>${money(doc.paid||0)}</b><br>Công nợ <b>${money(doc.debt||0)}</b></div>`:""}${f.signature?`<div class="print-sign"><div><b>Khách hàng</b><div class="print-note">(Ký, ghi rõ họ tên)</div></div><div style="text-align:right"><b>KPOS</b><div class="print-note">(Ký xác nhận)</div></div></div>`:""}</div>`}
+function renderWarrantyPrint(tpl,doc){const f=tpl.fields||{};if(tpl.paper==="K80")return `<div class="print-doc print-k80">${f.store?`<h2 class="print-orange" style="text-align:center">KPOS</h2><div class="print-meta" style="text-align:center">${storeProfile.name}${f.address?`<br>${storeProfile.address}`:""}</div>`:""}<div class="print-hr"></div><div class="print-title">PHIẾU BẢO HÀNH</div><div class="print-meta">${f.code?`Mã: <b>${doc.code}</b><br>`:""}${f.date?`Ngày: ${fmtDateTime(doc.date)}<br>`:""}${f.customer?`Khách: ${esc(doc.customerName)}<br>SĐT: ${esc(doc.customerPhone)}<br>`:""}${f.product?`Sản phẩm: ${esc(doc.productName)}<br>`:""}${f.imei?`IMEI/Serial: <b>${esc(doc.imei)}</b><br>`:""}${f.issue?`Lỗi tiếp nhận: ${esc(doc.issue)}<br>`:""}${f.warrantyTerm?`Thời hạn BH: ${esc(doc.warrantyTerm)}<br>`:""}</div><div class="print-hr"></div><div class="print-meta">Điều kiện bảo hành:<br>• Sản phẩm còn tem, không rơi vỡ hoặc vào nước.<br>• Xuất trình mã phiếu/IMEI khi nhận bảo hành.</div>${f.qr?`<div class="print-hr"></div><div style="text-align:center;font-size:32px">▣</div>`:""}${f.signature?`<div class="print-hr"></div><div class="print-meta">Khách hàng ký nhận: __________________</div>`:""}</div>`;return `<div class="print-doc print-a4"><div class="print-head"><div><h2 class="print-orange">KPOS</h2><div class="print-meta">${storeProfile.name}<br>${storeProfile.address}</div></div><div style="text-align:right"><h2>PHIẾU BẢO HÀNH</h2><div class="print-meta">Mã: <b>${doc.code}</b><br>Ngày: ${fmtDateTime(doc.date)}</div></div></div><div class="print-hr"></div><table class="print-table"><tr><th colspan="2">THÔNG TIN KHÁCH HÀNG</th></tr><tr><td>Họ tên</td><td>${esc(doc.customerName)}</td></tr><tr><td>Số điện thoại</td><td>${esc(doc.customerPhone)}</td></tr><tr><th colspan="2">THÔNG TIN SẢN PHẨM</th></tr><tr><td>Sản phẩm</td><td>${esc(doc.productName)}</td></tr><tr><td>IMEI/Serial</td><td>${esc(doc.imei)}</td></tr><tr><td>Lỗi tiếp nhận</td><td>${esc(doc.issue)}</td></tr><tr><td>Thời hạn bảo hành</td><td>${esc(doc.warrantyTerm)}</td></tr></table><div class="print-note" style="margin-top:12px"><b>Điều kiện bảo hành</b><br>1. Bảo hành theo chính sách KPOS/nhà sản xuất.<br>2. Không áp dụng với rơi vỡ, vào nước, cháy nổ hoặc tác động vật lý.</div>${f.signature?`<div class="print-sign"><div><b>Khách hàng</b><div class="print-note">(Ký và ghi rõ họ tên)</div></div><div style="text-align:right"><b>KPOS</b><div class="print-note">(Ký xác nhận)</div></div></div>`:""}</div>`}
+function renderPrintContent(tpl,doc){return tpl.docType==="sale"?renderSalePrint(tpl,doc):renderWarrantyPrint(tpl,doc)}
+window.previewTemplate=(id,sourceType="sample",sourceId=null)=>{const tpl=clone(getTemplate(id));let doc=tpl.docType==="sale"?sampleSaleDoc():sampleWarrantyDoc();if(sourceType==="invoice"&&sourceId){const inv=invoice(sourceId);if(inv)doc=invoiceToPrintDoc(inv)}if(sourceType==="warranty"&&sourceId){const w=db.warranties.find(x=>x.id===sourceId);if(w)doc=warrantyToPrintDoc(w)}state.modal={type:"printPreview",tpl,doc,sourceType,sourceId};render()}
+window.openTemplateEditor=id=>{state.modal={type:"templateEditor",tpl:clone(getTemplate(id))};render()}
+window.toggleTplField=key=>{state.modal.tpl.fields[key]=!state.modal.tpl.fields[key];render()}
+window.saveTemplateEditor=()=>{const tpl=state.modal.tpl;tpl.name=$("#tpl_name").value.trim()||tpl.name;tpl.desc=$("#tpl_desc").value.trim()||tpl.desc;const i=db.printTemplates.findIndex(x=>x.id===tpl.id);if(i>=0)db.printTemplates[i]=tpl;saveDB();state.modal=null;state.screen="prints";render()}
+window.setPrintDocType=t=>{state.printDocType=t;render()}
+window.printCurrentTemplate=()=>{const m=state.modal;if(!m?.tpl||!m?.doc)return;const html=renderPrintContent(m.tpl,m.doc);const w=window.open("","_blank","width=900,height=800");w.document.write(`<html><head><meta charset="utf-8"><title>In KPOS</title><style>body{font-family:Arial,sans-serif;padding:20px}.print-k80{width:300px;margin:auto}.print-a4{max-width:760px;margin:auto}.print-meta,.print-note{font-size:12px;line-height:1.5}.print-hr{border-top:1px dashed #999;margin:10px 0}.print-title{text-align:center;font-size:18px;font-weight:bold}.print-items,.print-table{width:100%;border-collapse:collapse;font-size:12px}.print-items th,.print-items td{padding:5px 0;border-bottom:1px dashed #ddd;text-align:left}.print-items th:last-child,.print-items td:last-child{text-align:right}.print-table th,.print-table td{border:1px solid #ddd;padding:8px}.print-head{display:flex;justify-content:space-between}.print-total{margin:15px 0 0 auto;max-width:330px;line-height:1.7}.print-total b{float:right}.print-sign{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:28px}.print-orange{color:#ea580c}</style></head><body>${html}<script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()}
+
+function loginView(){
+  app.innerHTML=`<div class="login"><div class="login-card">
+    <div class="logo"><div class="logo-badge">KP</div><div>KPOS Mobile V6</div></div>
+    <div class="sub">Bán hàng • CRM • Kho • IMEI • Bảo hành</div>
+    <div class="field"><label>Tài khoản</label><input id="loginUser" value="admin"></div>
+    <div class="field"><label>Mật khẩu</label><input id="loginPass" type="password" value="123456"></div>
+    <button class="btn primary block" onclick="doLogin()">ĐĂNG NHẬP</button>
