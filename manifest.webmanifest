@@ -1,11 +1,13 @@
 {
-  "name": "KPOS Mobile",
+  "name": "KPOS Mobile V6",
   "short_name": "KPOS",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#fffaf7",
   "theme_color": "#f97316",
-  "description": "KPOS bán hàng, CRM, IMEI/Serial, bảo hành, công nợ và mẫu in K80/A4.",
-  "icons": [{"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "description": "KPOS Mobile: bán hàng, CRM, IMEI/Serial, bảo hành, công nợ, quét liên tục và mẫu in K80/A4.",
+  "icons": [
+    {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
 }
