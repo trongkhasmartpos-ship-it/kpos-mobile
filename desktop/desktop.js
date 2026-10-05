@@ -85,14 +85,14 @@
   window.renderPosProducts=()=>{
     const el=document.querySelector('#posProducts');if(!el)return;
     const q=(document.querySelector('#posSearch')?.value||'').trim().toLowerCase();
-    let imeiProductIds=new Set();
+    const imeiProductIds=new Set();
     if(q)db.imeis.forEach(i=>{if(String(i.value||'').toLowerCase().includes(q))imeiProductIds.add(i.productId)});
     const list=db.products.filter(p=>!q||[p.name,p.short,p.keywords,p.sku,p.barcode].some(x=>String(x||'').toLowerCase().includes(q))||imeiProductIds.has(p.id)).slice(0,isDesktop()?80:30);
     el.innerHTML=posProductCards(list);
   };
 
-  function addTableHead(id,labels){
-    const list=document.querySelector(id);if(!list||list.dataset.desktopManaged==='1')return;
+  function addTableHead(selector,labels){
+    const list=document.querySelector(selector);if(!list||list.dataset.desktopManaged==='1')return;
     list.dataset.desktopManaged='1';list.classList.add('desktop-managed-list');
     const head=document.createElement('div');head.className='desktop-table-head';head.innerHTML=labels.map(x=>`<div>${esc(x)}</div>`).join('');
     list.parentNode.insertBefore(head,list);
@@ -102,8 +102,13 @@
     switch(state.screen){
       case 'products':addTableHead('#productList',['Sản phẩm / SKU','Giá bán & tồn kho','Trạng thái']);break;
       case 'customers':addTableHead('#customerList',['Khách hàng / liên hệ','Doanh số & trạng thái','Công nợ']);break;
+      case 'crmCustomers':addTableHead('.content .list',['Khách hàng CRM','Nhu cầu / trạng thái','Chăm sóc tiếp theo']);break;
       case 'invoices':addTableHead('#invoiceList',['Hóa đơn / khách hàng','Ngày & giá trị','Thanh toán']);break;
       case 'imei':addTableHead('#imeiList',['IMEI / Serial','Sản phẩm / khách hàng','Trạng thái']);break;
+      case 'debts':addTableHead('.content .list',['Khách hàng','Thông tin công nợ','Còn phải thu']);break;
+      case 'payments':addTableHead('.content .list',['Phiếu thu','Khách hàng / phương thức','Số tiền']);break;
+      case 'stock':addTableHead('.content .list',['Phiếu nhập','Nhà cung cấp / thời gian','Số lượng']);break;
+      case 'inventory':addTableHead('.content .list',['Sản phẩm','Chứng từ / thời gian','Biến động tồn']);break;
       case 'warranty':addTableHead('#warrantyList',['Phiếu / IMEI','Khách hàng / sản phẩm','Trạng thái']);break;
     }
     const content=document.querySelector('.content');if(content)content.dataset.screen=state.screen;
