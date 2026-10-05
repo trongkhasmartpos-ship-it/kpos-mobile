@@ -1,12 +1,12 @@
 {
-  "name": "KPOS Mobile V8",
+  "name": "KPOS Web App & Mobile",
   "short_name": "KPOS",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#fffaf7",
   "theme_color": "#f97316",
-  "description": "KPOS Mobile V8: bán hàng, CRM, IMEI/Serial, bảo hành, công nợ, Supabase Auth và đồng bộ nhiều thiết bị.",
+  "description": "KPOS dùng chung trên điện thoại và máy tính: bán hàng, CRM, IMEI/Serial, bảo hành, công nợ, mẫu in và Supabase Realtime.",
   "icons": [
     {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
   ]
