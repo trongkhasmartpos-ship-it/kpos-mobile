@@ -1,0 +1,250 @@
+meiSearch" placeholder="Nhập / quét IMEI hoặc Serial" oninput="filterImeis()"><button class="btn accent" onclick="openScanner('imei')">📷</button></div>
+    <div class="seg">${filters.map(([v,l])=>`<button class="${state.imeiFilter===v?"active":""}" onclick="setImeiFilter('${v}')">${l}</button>`).join("")}</div>
+    <div id="imeiList" class="list" style="margin-top:12px">${imeiCards(list)}</div>
+  </div>${nav()}`;
+}
+window.setImeiFilter=f=>{state.imeiFilter=f;render()}
+function imeiCards(list){
+  return list.map(i=>{const p=product(i.productId),c=customer(i.customerId);return `<div class="item" onclick="openImeiDetail(${i.id})"><div class="thumb">🔢</div><div class="item-main"><div class="item-title mono">${esc(i.value)}</div><div class="item-sub">${esc(p?.name||"Không rõ")}${c?` • ${esc(c.name)}`:""}</div></div><span class="badge ${i.status==="Trong kho"?"green":i.status==="Đã bán"?"":"orange"}">${esc(i.status)}</span></div>`}).join("")||'<div class="empty">Chưa có IMEI</div>';
+}
+window.filterImeis=()=>{
+  const q=$("#imeiSearch").value.toLowerCase();
+  let list=db.imeis.filter(i=>{
+    const p=product(i.productId),c=customer(i.customerId);
+    return [i.value,i.status,p?.name,c?.name,c?.phone].some(x=>String(x||"").toLowerCase().includes(q));
+  });
+  if(state.imeiFilter!=="all")list=list.filter(i=>i.status===state.imeiFilter);
+  $("#imeiList").innerHTML=imeiCards(list);
+}
+window.openImeiDetail=id=>{state.modal={type:"imeiDetail",i:imeiObj(id)};render()}
+
+/* ================= STOCK / IMEI RECEIVE ================= */
+window.openStockReceipt=()=>{state.modal={type:"stockReceipt",items:[],supplier:"",note:""};render()}
+window.addStockByCode=()=>{
+  const v=$("#sr_code").value.trim();if(!v)return;
+  const p=findProductByCode(v);if(!p)return toast("Không tìm thấy sản phẩm");
+  let it=state.modal.items.find(x=>x.productId===p.id);
+  if(it)it.qty++;else state.modal.items.push({productId:p.id,qty:1,imeis:[]});
+  render();
+}
+window.changeStockQty=(id,d)=>{
+  const it=state.modal.items.find(x=>x.productId===id);if(!it)return;
+  it.qty+=d;if(it.qty<=0)state.modal.items=state.modal.items.filter(x=>x.productId!==id);
+  if(it.imeis?.length>it.qty)it.imeis=it.imeis.slice(0,it.qty);render();
+}
+window.openStockImeis=productId=>{
+  const it=state.modal.items.find(x=>x.productId===productId);
+  state.modal={type:"stockImeis",productId,imeis:[...(it?.imeis||[])],receipt:state.modal};render();
+}
+window.addStockImeiManual=()=>{
+  const v=$("#si_value").value.trim();if(!v)return;
+  addStockImeiValue(v);$("#si_value").value="";
+}
+function addStockImeiValue(v){
+  const m=state.modal,p=product(m.productId),receipt=m.receipt,it=receipt.items.find(x=>x.productId===m.productId);
+  if(m.imeis.includes(v)||db.imeis.some(i=>i.value===v))return toast("IMEI đã tồn tại");
+  if(m.imeis.length>=it.qty)return toast(`Đã đủ ${it.qty} IMEI`);
+  m.imeis.push(v);render();
+}
+window.removeStockImei=idx=>{state.modal.imeis.splice(idx,1);render()}
+window.saveStockImeis=()=>{
+  const m=state.modal,receipt=m.receipt,it=receipt.items.find(x=>x.productId===m.productId);
+  if(m.imeis.length!==it.qty)return toast(`Cần nhập đủ ${it.qty} IMEI`);
+  it.imeis=[...m.imeis];state.modal=receipt;render();
+}
+window.finishStockReceipt=()=>{
+  const m=state.modal;if(!m.items.length)return toast("Chưa có sản phẩm");
+  for(const it of m.items){
+    const p=product(it.productId);
+    if(p.imeiEnabled && (it.imeis||[]).length!==it.qty)return toast(`Nhập đủ IMEI cho ${p.name}`);
+  }
+  const r={id:Date.now(),code:code("NH",db.stockReceipts),date:new Date().toISOString(),supplier:$("#sr_supplier")?.value.trim()||"",note:$("#sr_note")?.value.trim()||"",items:clone(m.items)};
+  r.items.forEach(it=>{
+    const p=product(it.productId);p.stock+=it.qty;addMovement(p.id,it.qty,"RECEIVE",r.code,"Nhập hàng");
+    (it.imeis||[]).forEach(v=>db.imeis.unshift({id:Date.now()+Math.random(),productId:p.id,value:v,status:"Trong kho",stockReceiptId:r.id,customerId:null,invoiceId:null,receivedDate:r.date,soldDate:null,warrantyStart:null,warrantyEnd:null}));
+  });
+  db.stockReceipts.unshift(r);addActivity(`Nhập hàng ${r.code}`);saveDB();state.modal=null;state.screen="stock";render();
+}
+function stockView(){
+  return `${topbar("Nhập hàng","Quét mã • nhập IMEI hàng loạt")}<div class="content">
+    <button class="btn accent block" onclick="openStockReceipt()">📷 TẠO PHIẾU NHẬP / QUÉT MÃ</button>
+    <div class="section-title">Phiếu nhập gần đây</div><div class="list">${db.stockReceipts.map(r=>`<div class="item"><div class="thumb">📥</div><div class="item-main"><div class="item-title">${r.code}</div><div class="item-sub">${fmtDateTime(r.date)} • ${r.items.reduce((a,b)=>a+b.qty,0)} sản phẩm</div><div class="small muted">${esc(r.supplier||"")}</div></div></div>`).join("")||'<div class="empty">Chưa có phiếu nhập.</div>'}</div>
+  </div>${nav()}`;
+}
+function inventoryView(){
+  return `${topbar("Lịch sử kho","Mọi lần nhập • bán • điều chỉnh")}
+  <div class="content"><div class="list">${db.inventoryMovements.map(m=>{const p=product(m.productId);return `<div class="item"><div class="thumb">${m.qty>=0?"📥":"📤"}</div><div class="item-main"><div class="item-title">${esc(p?.name||"")}</div><div class="item-sub">${esc(m.code)} • ${fmtDateTime(m.date)}</div><div class="small muted">${esc(m.note||"")}</div></div><div class="right"><b class="${m.qty>=0?"success-text":"danger-text"}">${m.qty>=0?"+":""}${m.qty}</b><div class="small muted">Tồn ${m.balance}</div></div></div>`}).join("")||'<div class="empty">Chưa có lịch sử kho.</div>'}</div></div>${nav()}`;
+}
+
+/* ================= WARRANTY ================= */
+function warrantyView(){
+  return `${topbar("Bảo hành","Quét IMEI để tự tra khách + hóa đơn")}
+  <div class="content">
+    <div class="searchrow"><input id="wSearch" placeholder="IMEI, SĐT, tên khách, mã phiếu..." oninput="filterWarranties()"><button class="btn accent" onclick="openScanner('warrantySearch')">📷</button></div>
+    <button class="btn primary block" onclick="openWarrantyForm()">＋ Tiếp nhận bảo hành</button>
+    <div class="section-title">Phiếu bảo hành</div><div id="warrantyList" class="list">${warrantyCards(db.warranties)}</div>
+  </div>${nav()}`;
+}
+function warrantyCards(list){
+  return list.map(w=>`<div class="item" onclick="openWarrantyDetail(${w.id})"><div class="thumb">🛡️</div><div class="item-main"><div class="item-title">${esc(w.code)}</div><div class="item-sub mono">${esc(w.imei)}</div><div class="small muted">${esc(w.customerName||"Khách lẻ")} • ${esc(w.productName||"")}</div></div><span class="badge orange">${esc(w.status)}</span></div>`).join("")||'<div class="empty">Chưa có phiếu bảo hành.</div>';
+}
+window.filterWarranties=()=>{const q=$("#wSearch").value.toLowerCase();$("#warrantyList").innerHTML=warrantyCards(db.warranties.filter(w=>Object.values(w).join(" ").toLowerCase().includes(q)))}
+window.openWarrantyForm=(imeiValue="")=>{
+  const draft={imei:imeiValue,customerName:"",phone:"",issue:"",status:"Mới tiếp nhận",productName:"",invoiceCode:"",warrantyText:""};
+  hydrateWarrantyDraft(draft,imeiValue);
+  state.modal={type:"warrantyForm",draft};render();
+}
+function hydrateWarrantyDraft(draft,imeiValue){
+  const im=db.imeis.find(i=>i.value===imeiValue);if(!im)return;
+  const p=product(im.productId),c=customer(im.customerId),inv=invoice(im.invoiceId);
+  draft.imei=im.value;draft.customerName=c?.name||"";draft.phone=c?.phone||"";draft.productName=p?.name||"";draft.invoiceCode=inv?.code||"";
+  draft.warrantyText=im.warrantyEnd?`Bảo hành đến ${fmtDate(im.warrantyEnd)}`:"Chưa có thời hạn bảo hành";
+}
+window.lookupWarrantyImei=()=>{
+  const v=$("#wf_imei").value.trim();const d=state.modal.draft;hydrateWarrantyDraft(d,v);render();
+}
+window.saveWarranty=()=>{
+  const d=state.modal.draft;
+  d.imei=$("#wf_imei").value.trim();d.customerName=$("#wf_customer").value.trim();d.phone=$("#wf_phone").value.trim();d.issue=$("#wf_issue").value.trim();d.status=$("#wf_status").value;
+  if(!d.imei)return toast("Nhập hoặc quét IMEI / Serial");
+  hydrateWarrantyDraft(d,d.imei);
+  const w={...d,id:Date.now(),code:code("BH",db.warranties),date:new Date().toISOString()};
+  db.warranties.unshift(w);
+  const im=db.imeis.find(i=>i.value===d.imei);if(im)im.status="Bảo hành";
+  addActivity(`Tiếp nhận bảo hành ${w.code}`);saveDB();state.modal=null;render();
+}
+window.openWarrantyDetail=id=>{state.modal={type:"warrantyDetail",w:db.warranties.find(x=>x.id===id)};render()}
+window.updateWarrantyStatus=(id,status)=>{
+  const w=db.warranties.find(x=>x.id===id);if(!w)return;w.status=status;
+  const im=db.imeis.find(i=>i.value===w.imei);
+  if(im){im.status=status==="Đã trả khách"||status==="Hoàn thành"?"Đã bán":"Bảo hành"}
+  saveDB();state.modal={type:"warrantyDetail",w};render();
+}
+
+/* ================= INVOICES / PAYMENTS ================= */
+function invoicesView(){
+  const q="";
+  return `${topbar("Hóa đơn","Chi tiết IMEI • thanh toán • công nợ")}
+  <div class="content"><div class="searchrow"><input id="invSearch" placeholder="Mã HD, khách, IMEI..." oninput="filterInvoices()"></div>
+  <div id="invoiceList" class="list">${invoiceCards(db.invoices)}</div></div>${nav()}`;
+}
+function invoiceCards(list){
+  return list.map(inv=>{const c=customer(inv.customerId);return `<div class="item" onclick="openInvoiceDetail(${inv.id})"><div class="thumb">🧾</div><div class="item-main"><div class="item-title">${inv.code}</div><div class="item-sub">${fmtDateTime(inv.date)}${c?` • ${esc(c.name)}`:" • Khách lẻ"}</div><div class="price">${money(inv.total)}</div></div><span class="badge ${inv.debt?"red":"green"}">${inv.debt?`Nợ ${money(inv.debt)}`:"Đã trả"}</span></div>`}).join("")||'<div class="empty">Chưa có hóa đơn.</div>';
+}
+window.filterInvoices=()=>{
+  const q=$("#invSearch").value.toLowerCase();
+  const list=db.invoices.filter(inv=>{
+    const c=customer(inv.customerId);
+    const imeis=(inv.items||[]).flatMap(x=>x.imeis||[]).map(id=>imeiObj(id)?.value||"").join(" ");
+    return [inv.code,c?.name,c?.phone,imeis].some(x=>String(x||"").toLowerCase().includes(q));
+  });
+  $("#invoiceList").innerHTML=invoiceCards(list);
+}
+window.openInvoiceDetail=id=>{state.modal={type:"invoiceDetail",inv:invoice(id)};render()}
+function paymentsView(){
+  return `${topbar("Thu tiền","Lịch sử thanh toán")}<div class="content"><div class="list">${db.payments.map(p=>{const c=customer(p.customerId),inv=invoice(p.invoiceId);return `<div class="item"><div class="thumb">💵</div><div class="item-main"><div class="item-title">${esc(p.code)}</div><div class="item-sub">${fmtDateTime(p.date)} • ${esc(p.method)}</div><div class="small muted">${c?esc(c.name):"Khách lẻ"}${inv?` • ${inv.code}`:""}</div></div><b>${money(p.amount)}</b></div>`}).join("")||'<div class="empty">Chưa có giao dịch.</div>'}</div></div>${nav()}`;
+}
+
+/* ================= REPORTS ================= */
+function reportsView(){
+  const revenue=db.invoices.reduce((a,b)=>a+b.total,0),profit=db.invoices.reduce((a,b)=>a+b.profit,0),debt=db.customers.reduce((a,b)=>a+b.debt,0);
+  const cash=db.payments.filter(p=>p.method==="Tiền mặt").reduce((a,b)=>a+b.amount,0);
+  const bank=db.payments.filter(p=>p.method==="Chuyển khoản").reduce((a,b)=>a+b.amount,0);
+  const soldImeis=db.imeis.filter(i=>i.status==="Đã bán"||i.status==="Bảo hành").length;
+  return `${topbar("Báo cáo","Bán hàng • kho • CRM • bảo hành")}<div class="content">
+    <div class="grid two">${stat("Doanh thu",money(revenue))}${stat("Lợi nhuận",money(profit))}${stat("Công nợ",money(debt))}${stat("Tổng đơn",db.invoices.length)}${stat("Tiền mặt",money(cash))}${stat("Chuyển khoản",money(bank))}${stat("IMEI đã bán",soldImeis)}${stat("Bảo hành",db.warranties.length)}</div>
+    <div class="section-title">Sản phẩm bán</div><div class="card table-like">
+      <div class="table-row table-head"><div>Sản phẩm</div><div class="center">SL</div><div class="right">Doanh thu</div></div>
+      ${db.products.map(p=>{
+        const qty=db.invoices.flatMap(i=>i.items||[]).filter(x=>x.productId===p.id).reduce((a,b)=>a+b.qty,0);
+        return `<div class="table-row"><div>${esc(p.name)}</div><div class="center">${qty}</div><div class="right">${money(qty*p.price)}</div></div>`;
+      }).join("")}
+    </div>
+  </div>${nav()}`;
+}
+
+
+/* ================= CRM CARE APP ================= */
+function crmDueList(mode="today"){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const end=new Date(start);end.setDate(end.getDate()+1);
+  return db.customers.filter(c=>{
+    if(!c.nextCareAt)return false;
+    const d=new Date(c.nextCareAt);
+    if(mode==="today")return d>=start&&d<end;
+    if(mode==="overdue")return d<start&&c.status!=="Đã mua hàng"&&c.status!=="Không mua";
+    if(mode==="upcoming")return d>=end;
+    return true;
+  }).sort((a,b)=>new Date(a.nextCareAt)-new Date(b.nextCareAt));
+}
+function crmTabs(active){
+  const tabs=[["crmDashboard","Tổng quan"],["crmCustomers","Khách hàng"],["crmToday","Hôm nay"],["crmOverdue","Quá hạn"],["crmReports","Báo cáo"]];
+  return `<div class="seg" style="margin-bottom:12px">${tabs.map(([s,l])=>`<button class="${active===s?"active":""}" onclick="go('${s}')">${l}</button>`).join("")}</div>`;
+}
+function crmDashboard(){
+  const today=crmDueList("today"),over=crmDueList("overdue"),up=crmDueList("upcoming");
+  const hot=db.customers.filter(c=>["Đang tư vấn","Đang cân nhắc","Đang báo giá","Hẹn gọi lại"].includes(c.status)).length;
+  return `${topbar("CRM","Chăm sóc khách chưa mua trong KPOS")}
+  <div class="content">
+    ${crmTabs("crmDashboard")}
+    <div class="crm-hero"><b>CRM CHĂM SÓC KHÁCH HÀNG</b><div class="small muted" style="margin-top:4px">Một chức năng trong KPOS, dùng chung khách hàng và dữ liệu bán hàng.</div></div>
+    <div class="grid two" style="margin-top:12px">${stat("Care hôm nay",today.length)}${stat("Quá hạn",over.length)}${stat("Đang theo",hot)}${stat("Sắp tới",up.length)}</div>
+    <div class="section-title">Khách cần xử lý ngay</div>
+    <div class="crm-board">${[...over,...today].slice(0,8).map(crmCustomerCard).join("")||'<div class="empty">Không có lịch care cần xử lý.</div>'}</div>
+  </div>${nav()}`;
+}
+function crmCustomerCard(c){
+  return `<div class="crm-card" onclick="openCrmCustomer(${c.id})">
+    <div class="row-between"><b>${esc(c.name)}</b><span class="crm-status">${esc(c.status)}</span></div>
+    <div class="small muted" style="margin-top:5px">${esc(c.phone||"")}</div>
+    <div style="margin-top:7px"><b>Nhu cầu:</b> ${esc(c.need||"Chưa ghi")}</div>
+    <div class="crm-next">Care tiếp: <b>${c.nextCareAt?fmtDateTime(c.nextCareAt):"Chưa đặt lịch"}</b></div>
+  </div>`;
+}
+function crmCustomersView(){
+  const list=db.customers.filter(c=>c.status!=="Đã mua hàng");
+  return `${topbar("Khách CRM","Chỉ khách chưa mua / đang chăm sóc")}
+  <div class="content">${crmTabs("crmCustomers")}<div class="searchrow"><input id="crmSearch" placeholder="Tên, SĐT, nhu cầu..." oninput="filterCrmCustomers()"><button class="btn primary" onclick="openCrmCustomerForm()">＋</button></div>
+  <div id="crmList" class="crm-board">${list.map(crmCustomerCard).join("")||'<div class="empty">Chưa có khách CRM.</div>'}</div></div><button class="fab" onclick="openCrmCustomerForm()">＋</button>${nav()}`;
+}
+window.filterCrmCustomers=()=>{
+  const q=$("#crmSearch").value.toLowerCase();
+  const list=db.customers.filter(c=>c.status!=="Đã mua hàng" && [c.name,c.phone,c.need,c.status].some(x=>String(x||"").toLowerCase().includes(q)));
+  $("#crmList").innerHTML=list.map(crmCustomerCard).join("")||'<div class="empty">Không tìm thấy khách.</div>';
+}
+window.openCrmCustomer=id=>{state.modal={type:"crmDetail",c:customer(id)};render()}
+window.openCrmCustomerForm=(id=null)=>{
+  const c=id?clone(customer(id)):{name:"",phone:"",phone2:"",status:"Khách mới",need:"",budget:"",nextCareAt:"",lastCareAt:"",careChannel:"Gọi điện",note:"",careHistory:[]};
+  state.modal={type:"crmForm",c,editing:!!id};render()
+}
+window.saveCrmCustomer=()=>{
+  const c=state.modal.c;
+  c.name=$("#crmf_name").value.trim();c.phone=$("#crmf_phone").value.trim();c.status=$("#crmf_status").value;
+  c.need=$("#crmf_need").value.trim();c.budget=$("#crmf_budget").value.trim();c.nextCareAt=$("#crmf_next").value?new Date($("#crmf_next").value).toISOString():"";c.careChannel=$("#crmf_channel").value;c.note=$("#crmf_note").value.trim();
+  if(!c.name)return toast("Nhập tên khách hàng");
+  if(state.modal.editing)db.customers[db.customers.findIndex(x=>x.id===c.id)]=c;else{c.id=Date.now();db.customers.unshift(c)}
+  saveDB();state.modal=null;state.screen="crmCustomers";render()
+}
+window.addCareLog=id=>{
+  const c=customer(id);state.modal={type:"careLog",c};render()
+}
+window.saveCareLog=()=>{
+  const c=state.modal.c,text=$("#care_note").value.trim(),result=$("#care_result").value,next=$("#care_next").value,channel=$("#care_channel").value;
+  if(!text)return toast("Nhập nội dung care");
+  const nextIso=next?new Date(next).toISOString():"";c.careHistory=c.careHistory||[];c.careHistory.unshift({id:Date.now(),date:new Date().toISOString(),channel,result,note:text,nextCareAt:nextIso});
+  c.lastCareAt=new Date().toISOString();c.nextCareAt=nextIso;c.careChannel=channel;
+  if(result)c.status=result;
+  saveDB();state.modal={type:"crmDetail",c};render()
+}
+function crmTodayView(){
+  const list=crmDueList("today");
+  return `${topbar("Care hôm nay","Lịch cần xử lý trong ngày")}<div class="content">${crmTabs("crmToday")}<div class="crm-board">${list.map(crmCustomerCard).join("")||'<div class="empty">Hôm nay không có lịch care.</div>'}</div></div>${nav()}`;
+}
+function crmOverdueView(){
+  const list=crmDueList("overdue");
+  return `${topbar("Care quá hạn","Ưu tiên xử lý trước")}<div class="content">${crmTabs("crmOverdue")}<div class="crm-board">${list.map(crmCustomerCard).join("")||'<div class="empty">Không có khách quá hạn.</div>'}</div></div>${nav()}`;
+}
+function crmReportsView(){
+  const statuses=["Khách mới","Chưa liên hệ","Đã liên hệ","Đang tư vấn","Hẹn gọi lại","Đang báo giá","Đang cân nhắc","Đã mua hàng","Không mua"];
+  return `${topbar("Báo
