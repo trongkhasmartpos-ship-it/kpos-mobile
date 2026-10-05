@@ -1,0 +1,292 @@
+button>
+    <div class="notice" style="margin-top:14px"><b>Bản test:</b> admin / 123456. V2 tự nâng dữ liệu từ V1 nếu có.</div>
+  </div></div>`;
+}
+window.doLogin=()=>{localStorage.setItem(sessionKey,"1");render()}
+window.logout=()=>{localStorage.removeItem(sessionKey);render()}
+
+function topbar(title,subtitle=""){
+  return `<div class="topbar"><div class="toprow"><div><div class="title">${title}</div><div class="subtitle">${subtitle}</div></div><div class="avatar">KP</div></div></div>`;
+}
+function nav(){
+  const items=[
+    ["dashboard","🏠","Tổng quan"],
+    ["pos","🛒","Bán hàng"],
+    ["crmDashboard","👥","CRM"],
+    ["warranty","🛡️","Bảo hành"],
+    ["more","☰","Thêm"]
+  ];
+  return `<div class="bottomnav">${items.map(([id,ico,label])=>`<button class="navitem ${state.screen===id?"active":""} ${id==="pos"?"center":""}" onclick="go('${id}')"><span class="ico">${ico}</span>${label}</button>`).join("")}</div>`;
+}
+window.go=s=>{stopScanner();state.screen=s;state.modal=null;render();scrollTo(0,0)}
+function stat(label,value){return `<div class="card stat"><div class="label">${label}</div><div class="value">${value}</div></div>`}
+function action(ico,label,on){return `<button class="action" onclick="${on}"><div class="ico">${ico}</div>${label}</button>`}
+
+function dashboard(){
+  const revenue=db.invoices.reduce((a,b)=>a+(b.total||0),0);
+  const profit=db.invoices.reduce((a,b)=>a+(b.profit||0),0);
+  const cash=db.payments.filter(p=>p.method==="Tiền mặt").reduce((a,b)=>a+b.amount,0);
+  const bank=db.payments.filter(p=>p.method==="Chuyển khoản").reduce((a,b)=>a+b.amount,0);
+  const debt=db.customers.reduce((a,b)=>a+(b.debt||0),0);
+  const low=db.products.filter(p=>p.stock<=p.minStock).length;
+  return `${topbar("Tổng quan","KPOS • Bán hàng • CRM • IMEI • Bảo hành")}
+  <div class="content">
+    <div class="grid two">
+      ${stat("Doanh thu",money(revenue))}
+      ${stat("Lợi nhuận",money(profit))}
+      ${stat("Tổng đơn",db.invoices.length)}
+      ${stat("Công nợ",money(debt))}
+      ${stat("Tiền mặt",money(cash))}
+      ${stat("Chuyển khoản",money(bank))}
+      ${stat("IMEI trong kho",db.imeis.filter(i=>i.status==="Trong kho").length)}
+      ${stat("Hàng sắp hết",low)}
+    </div>
+    <div class="section-title">Thao tác nhanh</div>
+    <div class="actions">
+      ${action("🛒","Bán hàng","go('pos')")}
+      ${action("👥","CRM","go('crmDashboard')")}
+      ${action("📥","Nhập hàng","openStockReceipt()")}
+      ${action("🔢","Tra IMEI","go('imei')")}
+    </div>
+    <div class="section-title">Hoạt động gần đây</div>
+    <div class="card"><div class="timeline">${db.activities.slice(0,10).map(a=>`<div class="tl"><b>${esc(a.text)}</b><div class="small muted">${esc(a.time)}</div></div>`).join("")||'<div class="empty">Chưa có hoạt động</div>'}</div></div>
+  </div>${nav()}`;
+}
+
+/* ================= PRODUCTS ================= */
+function productsView(){
+  return `${topbar("Sản phẩm","Tên hàng • ảnh • barcode • tồn • IMEI")}
+  <div class="content">
+    <div class="searchrow"><input id="productSearch" placeholder="Tên, từ khóa, SKU, barcode..." oninput="filterProducts()"><button class="btn accent" onclick="openScanner('productSearch')">📷</button></div>
+    <div class="toolbar"><button class="btn primary small" onclick="openProductForm()">＋ Thêm sản phẩm</button><button class="btn ghost small" onclick="openStockReceipt()">📥 Nhập hàng</button></div>
+    <div id="productList" class="list">${productCards(db.products)}</div>
+  </div><button class="fab" onclick="openProductForm()">＋</button>${nav()}`;
+}
+function productCards(list){
+  if(!list.length)return `<div class="empty">Không tìm thấy sản phẩm.</div>`;
+  return list.map(p=>`<div class="item" onclick="openProductDetail(${p.id})">
+    ${p.images?.[0]?`<img class="thumb" src="${p.images[0]}">`:`<div class="thumb">📦</div>`}
+    <div class="item-main"><div class="item-title">${esc(p.name)}</div><div class="item-sub">${esc(p.sku||"")} • ${esc(p.barcode||"Chưa có mã")}</div><div class="price">${money(p.price)}</div></div>
+    <div><div class="badge ${p.stock<=p.minStock?"orange":"green"}">Tồn ${p.stock}</div>${p.imeiEnabled?`<div class="badge" style="margin-top:5px">${availableImeis(p.id).length} IMEI</div>`:""}</div>
+  </div>`).join("");
+}
+window.filterProducts=()=>{
+  const q=$("#productSearch").value.toLowerCase();
+  const list=db.products.filter(p=>[p.name,p.short,p.keywords,p.sku,p.barcode].some(x=>String(x||"").toLowerCase().includes(q)));
+  $("#productList").innerHTML=productCards(list);
+}
+function openProductForm(id=null){
+  const p=id?product(id):{name:"",short:"",keywords:"",sku:"",barcode:"",cost:0,price:0,stock:0,minStock:0,imeiEnabled:false,warranty:12,images:[]};
+  state.modal={type:"productForm",p:clone(p),editing:!!id};render();setTimeout(bindImagePicker,0);
+}
+window.openProductForm=openProductForm;
+function bindImagePicker(){
+  const picker=$("#imagePicker"); if(!picker)return;
+  picker.onchange=async()=>{
+    if(!state.modal||state.modal.type!=="productForm")return;
+    const files=[...picker.files].slice(0,8);
+    for(const f of files) state.modal.p.images.push(await fileToDataURL(f));
+    picker.value="";render();
+  }
+}
+function fileToDataURL(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)})}
+window.pickImages=()=>$("#imagePicker").click();
+window.removeImage=idx=>{state.modal.p.images.splice(idx,1);render()}
+window.saveProduct=()=>{
+  const p=state.modal.p;
+  ["name","short","keywords","sku","barcode"].forEach(k=>{const el=$("#pf_"+k);if(el)p[k]=el.value.trim()});
+  ["cost","price","stock","minStock","warranty"].forEach(k=>{const el=$("#pf_"+k);if(el)p[k]=Number(el.value)||0});
+  p.imeiEnabled=$("#pf_imei").checked;
+  if(!p.name)return toast("Vui lòng nhập tên sản phẩm");
+  const duplicate=db.products.find(x=>x.id!==p.id && p.barcode && x.barcode===p.barcode);
+  if(duplicate)return toast("Mã vạch đã thuộc sản phẩm khác");
+  if(!p.sku)p.sku="SP"+String(Date.now()).slice(-6);
+  if(state.modal.editing){
+    const old=product(p.id), oldStock=old.stock;
+    db.products[db.products.findIndex(x=>x.id===p.id)]=p;
+    if(oldStock!==p.stock)addMovement(p.id,p.stock-oldStock,"ADJUST","DIEUCHINH","Điều chỉnh tồn trong sản phẩm");
+  }else{
+    p.id=Date.now();db.products.unshift(p);
+    if(p.stock)addMovement(p.id,p.stock,"OPENING","TONDAU","Tồn khởi tạo sản phẩm");
+  }
+  addActivity(`Đã lưu sản phẩm: ${p.name}`);saveDB();state.modal=null;state.screen="products";render();
+}
+window.openProductDetail=id=>{state.modal={type:"productDetail",p:product(id),tab:"info"};render()}
+
+/* ================= POS ================= */
+function cartTotal(){
+  return db.cart.reduce((s,c)=>{const p=product(c.productId);return s+(p?.price||0)*c.qty},0);
+}
+function posView(){
+  return `${topbar("Bán hàng","Quét mã • chọn IMEI • công nợ")}
+  <div class="content">
+    <div class="searchrow"><input id="posSearch" placeholder="Quét barcode / tìm sản phẩm" oninput="renderPosProducts()"><button class="btn accent" onclick="openScanner('pos')">📷 Quét</button></div>
+    <div class="card row-between" style="margin-bottom:12px"><div><div class="small muted">Khách hàng</div><b>${state.activeCustomer?esc(state.activeCustomer.name):"Khách lẻ"}</b>${state.activeCustomer?`<div class="small ${state.activeCustomer.debt?"danger-text":"muted"}">Nợ hiện tại: ${money(state.activeCustomer.debt)}</div>`:""}</div><button class="btn ghost small" onclick="openCustomerPicker()">Chọn khách</button></div>
+    <div id="posProducts" class="list">${posProductCards(db.products.slice(0,20))}</div>
+    ${db.cart.length?`<div class="section-title">Giỏ hàng</div><div class="list">${cartCards()}</div>
+    <div class="cartbar"><div><div class="kpi">${db.cart.reduce((a,b)=>a+b.qty,0)} sản phẩm</div><div class="total">${money(cartTotal())}</div></div><button class="btn success" onclick="openCheckout()">THANH TOÁN</button></div>`:""}
+  </div>${nav()}`;
+}
+function posProductCards(list){
+  return list.map(p=>`<div class="item">
+    ${p.images?.[0]?`<img class="thumb" src="${p.images[0]}">`:`<div class="thumb">📦</div>`}
+    <div class="item-main"><div class="item-title">${esc(p.name)}</div><div class="item-sub">Tồn ${p.stock} • ${esc(p.sku)}</div>${p.imeiEnabled?`<div class="imei-flag">🔢 Có IMEI/Serial • ${availableImeis(p.id).length} máy</div>`:""}<div class="price">${money(p.price)}</div></div>
+    <button class="btn accent small" onclick="addCart(${p.id})">＋</button>
+  </div>`).join("");
+}
+window.renderPosProducts=()=>{
+  const q=$("#posSearch")?.value.toLowerCase()||"";
+  $("#posProducts").innerHTML=posProductCards(db.products.filter(p=>[p.name,p.short,p.keywords,p.sku,p.barcode].some(x=>String(x||"").toLowerCase().includes(q))).slice(0,30));
+}
+window.addCart=id=>{
+  const p=product(id);if(!p||p.stock<=0)return toast("Sản phẩm đã hết hàng");
+  let c=db.cart.find(x=>x.productId===id);
+  if(c){
+    if(c.qty>=p.stock)return toast("Số lượng vượt tồn kho");
+    if(p.imeiEnabled && c.qty>=availableImeis(id).length)return toast("Không đủ IMEI trong kho");
+    c.qty++;
+  }else db.cart.push({productId:id,qty:1,selectedImeis:[]});
+  saveDB();render();
+  if(p.imeiEnabled)setTimeout(()=>openImeiSelector(id),50);
+}
+function cartCards(){
+  return db.cart.map(c=>{
+    const p=product(c.productId), need=p.imeiEnabled, count=(c.selectedImeis||[]).length;
+    return `<div class="item"><div class="item-main"><div class="item-title">${esc(p.name)}</div>
+      <div class="price">${money(p.price*c.qty)}</div>
+      ${need?`<button class="btn ${count===c.qty?"success":"ghost"} small" style="margin-top:7px" onclick="openImeiSelector(${p.id})">🔢 IMEI/Serial ${count}/${c.qty}</button>`:""}
+      ${count?`<div class="taglist" style="margin-top:7px">${c.selectedImeis.map(id=>`<span class="imei-tag">${esc(imeiObj(id)?.value||"")}</span>`).join("")}</div>`:""}<div class="small muted" style="margin-top:6px">Bảo hành: ${p.warranty||0} tháng</div>
+    </div><div class="qty"><button onclick="changeQty(${p.id},-1)">−</button><b>${c.qty}</b><button onclick="changeQty(${p.id},1)">＋</button></div></div>`;
+  }).join("");
+}
+window.changeQty=(id,d)=>{
+  let c=db.cart.find(x=>x.productId===id),p=product(id);if(!c)return;
+  const next=c.qty+d;
+  if(next<=0){db.cart=db.cart.filter(x=>x.productId!==id);saveDB();render();return}
+  if(next>p.stock)return toast("Số lượng vượt tồn kho");
+  if(p.imeiEnabled && next>availableImeis(id).length)return toast("Không đủ IMEI trong kho");
+  c.qty=next;
+  if((c.selectedImeis||[]).length>next)c.selectedImeis=c.selectedImeis.slice(0,next);
+  saveDB();render();
+}
+window.openImeiSelector=productId=>{
+  const c=db.cart.find(x=>x.productId===productId);if(!c)return;
+  state.modal={type:"imeiSelector",productId,selected:[...(c.selectedImeis||[])]};render();
+}
+window.toggleImeiSelect=id=>{
+  const m=state.modal, idx=m.selected.indexOf(id), c=db.cart.find(x=>x.productId===m.productId);
+  if(idx>=0)m.selected.splice(idx,1);
+  else{
+    if(m.selected.length>=c.qty)return toast(`Chỉ cần chọn ${c.qty} IMEI`);
+    m.selected.push(id);
+  }
+  render();
+}
+window.saveImeiSelection=()=>{
+  const m=state.modal,c=db.cart.find(x=>x.productId===m.productId);
+  if(m.selected.length!==c.qty)return toast(`Cần chọn đủ ${c.qty} IMEI`);
+  c.selectedImeis=[...m.selected];saveDB();state.modal=null;render();
+}
+window.openCheckout=()=>{
+  for(const c of db.cart){
+    const p=product(c.productId);
+    if(p.imeiEnabled && (c.selectedImeis||[]).length!==c.qty)return toast(`Chọn đủ IMEI cho ${p.name}`);
+  }
+  state.modal={type:"checkout",method:"Tiền mặt",paid:cartTotal(),discount:0,surcharge:0};render();
+}
+window.finishCheckout=()=>{
+  if(!db.cart.length)return;
+  const subtotal=cartTotal();
+  const discount=Math.max(0,Number($("#co_discount")?.value)||0);
+  const surcharge=Math.max(0,Number($("#co_surcharge")?.value)||0);
+  const total=Math.max(0,subtotal-discount+surcharge);
+  const method=$("#co_method").value;
+  let paid=Math.max(0,Math.min(total,Number($("#co_paid").value)||0));
+  const debt=total-paid;
+  if(debt>0 && !state.activeCustomer)return toast("Đơn ghi nợ phải chọn khách hàng");
+  const invCode=code("HD",db.invoices);
+  const now=new Date().toISOString();
+  const items=db.cart.map(c=>({productId:c.productId,qty:c.qty,price:product(c.productId).price,imeis:[...(c.selectedImeis||[])]}));
+  const profit=items.reduce((s,it)=>{const p=product(it.productId);return s+(p.price-p.cost)*it.qty},0);
+  const inv={id:Date.now(),code:invCode,date:now,customerId:state.activeCustomer?.id||null,subtotal,discount,surcharge,total,paid,debt,paymentMethod:method,profit,items,status:debt>0?"Công nợ":"Hoàn thành"};
+  db.invoices.unshift(inv);
+
+  items.forEach(it=>{
+    const p=product(it.productId);p.stock-=it.qty;
+    addMovement(p.id,-it.qty,"SALE",inv.code,"Bán hàng");
+    it.imeis.forEach(iid=>{
+      const im=imeiObj(iid);if(!im)return;
+      im.status="Đã bán";im.customerId=inv.customerId;im.invoiceId=inv.id;im.soldDate=now;im.warrantyStart=now;im.warrantyEnd=addMonths(now,p.warranty||0);
+    });
+  });
+
+  if(state.activeCustomer){
+    state.activeCustomer.total=(state.activeCustomer.total||0)+total;
+    state.activeCustomer.debt=(state.activeCustomer.debt||0)+debt;
+    state.activeCustomer.status="Đã mua hàng";
+  }
+  if(paid>0){
+    db.payments.unshift({id:Date.now()+1,code:code("TH",db.payments),date:now,customerId:inv.customerId,invoiceId:inv.id,amount:paid,method,note:`Thanh toán ${inv.code}`});
+  }
+  addActivity(`${inv.code} • ${money(total)}${debt?` • Nợ ${money(debt)}`:""}`);
+  db.cart=[];saveDB();state.modal={type:"success",invoice:inv};render();
+}
+
+/* ================= CUSTOMERS / CRM / DEBT ================= */
+function customersView(){
+  const totalDebt=db.customers.reduce((a,b)=>a+(b.debt||0),0);
+  return `${topbar("Khách hàng CRM","Khách hàng • mua hàng • công nợ")}
+  <div class="content">
+    <div class="card row-between" style="margin-bottom:12px"><div><div class="small muted">Tổng công nợ khách</div><div class="total danger-text">${money(totalDebt)}</div></div><button class="btn ghost small" onclick="go('debts')">Xem công nợ</button></div>
+    <div class="searchrow"><input id="customerSearch" placeholder="Tên hoặc số điện thoại" oninput="filterCustomers()"><button class="btn primary" onclick="openCustomerForm()">＋</button></div>
+    <div id="customerList" class="list">${customerCards(db.customers)}</div>
+  </div><button class="fab" onclick="openCustomerForm()">＋</button>${nav()}`;
+}
+function customerCards(list){
+  return list.map(c=>`<div class="item" onclick="openCustomerDetail(${c.id})"><div class="thumb">👤</div><div class="item-main"><div class="item-title">${esc(c.name)}</div><div class="item-sub">${esc(c.phone)} • ${esc(c.status)}</div><div class="price">${money(c.total||0)}</div></div>${c.debt?`<span class="badge red">Nợ ${money(c.debt)}</span>`:`<span class="badge green">Đã thanh toán</span>`}</div>`).join("")||'<div class="empty">Chưa có khách hàng</div>';
+}
+window.filterCustomers=()=>{const q=$("#customerSearch").value.toLowerCase();$("#customerList").innerHTML=customerCards(db.customers.filter(c=>[c.name,c.phone,c.phone2,c.email].some(x=>String(x||"").toLowerCase().includes(q))))}
+window.openCustomerForm=(id=null)=>{
+  const c=id?customer(id):{name:"",phone:"",phone2:"",email:"",address:"",source:"",status:"Khách mới",total:0,debt:0,note:""};
+  state.modal={type:"customerForm",c:clone(c),editing:!!id};render();
+}
+window.saveCustomer=()=>{
+  const c=state.modal.c;
+  ["name","phone","phone2","email","address","source","note"].forEach(k=>c[k]=$("#cf_"+k)?.value.trim()||"");
+  c.status=$("#cf_status").value;
+  if(!c.name)return toast("Nhập tên khách hàng");
+  if(state.modal.editing)db.customers[db.customers.findIndex(x=>x.id===c.id)]=c;else{c.id=Date.now();db.customers.unshift(c)}
+  saveDB();state.modal=null;render();
+}
+window.openCustomerDetail=id=>{state.modal={type:"customerDetail",c:customer(id),tab:"orders"};render()}
+window.customerTab=tab=>{state.modal.tab=tab;render()}
+window.openCustomerPicker=()=>{state.modal={type:"customerPicker"};render()}
+window.selectCustomer=id=>{state.activeCustomer=customer(id);state.modal=null;render()}
+window.openDebtPayment=customerId=>{
+  const c=customer(customerId);state.modal={type:"debtPayment",customerId,amount:c.debt||0};render();
+}
+window.saveDebtPayment=()=>{
+  const c=customer(state.modal.customerId);
+  const amount=Math.min(c.debt,Math.max(0,Number($("#dp_amount").value)||0));
+  const method=$("#dp_method").value;
+  if(amount<=0)return toast("Nhập số tiền thu");
+  c.debt-=amount;
+  db.payments.unshift({id:Date.now(),code:code("TH",db.payments),date:new Date().toISOString(),customerId:c.id,invoiceId:null,amount,method,note:"Thu công nợ"});
+  addActivity(`Thu nợ ${c.name}: ${money(amount)}`);saveDB();state.modal=null;render();
+}
+function debtsView(){
+  const list=db.customers.filter(c=>c.debt>0).sort((a,b)=>b.debt-a.debt);
+  return `${topbar("Công nợ","Theo dõi và thu tiền khách hàng")}<div class="content">
+    <div class="grid two">${stat("Khách đang nợ",list.length)}${stat("Tổng nợ",money(list.reduce((a,b)=>a+b.debt,0)))}</div>
+    <div class="section-title">Danh sách công nợ</div><div class="list">${list.map(c=>`<div class="item"><div class="thumb">💰</div><div class="item-main"><div class="item-title">${esc(c.name)}</div><div class="item-sub">${esc(c.phone)}</div><div class="price danger-text">${money(c.debt)}</div></div><button class="btn success small" onclick="openDebtPayment(${c.id})">Thu tiền</button></div>`).join("")||'<div class="empty">Không có công nợ.</div>'}</div>
+  </div>${nav()}`;
+}
+
+/* ================= IMEI ================= */
+function imeiView(){
+  const filters=[["all","Tất cả"],["Trong kho","Trong kho"],["Đã bán","Đã bán"],["Bảo hành","Bảo hành"]];
+  let list=db.imeis;
+  if(state.imeiFilter!=="all")list=list.filter(i=>i.status===state.imeiFilter);
+  return `${topbar("IMEI / Serial","Tra cứu vòng đời từng thiết bị")}
+  <div class="content">
+    <div class="searchrow"><input id="i
