@@ -6,23 +6,23 @@
   <meta name="theme-color" content="#f97316" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <title>KPOS Mobile V6</title>
+  <title>KPOS Mobile V7</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
 </head>
 <body>
   <div id="app">
     <div style="min-height:100vh;display:grid;place-items:center;background:#fffaf7;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#111827;padding:24px;text-align:center">
-      <div><div style="font-size:42px;font-weight:900;color:#f97316">KP</div><b>Đang tải KPOS Mobile V6…</b></div>
+      <div><div style="font-size:42px;font-weight:900;color:#f97316">KP</div><b>Đang tải KPOS Mobile V7…</b></div>
     </div>
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const V6_APP_PARTS = [
+    const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
     ];
-    const V6_CSS_PARTS = ["v6/css-00.txt"];
+    const CORE_CSS_PARTS = ["v6/css-00.txt"];
 
     async function fetchText(path){
       const response = await fetch(path, {cache:"no-cache"});
@@ -31,15 +31,20 @@
     }
 
     (async()=>{
-      const css = (await Promise.all(V6_CSS_PARTS.map(fetchText))).join("");
+      const css = (await Promise.all(CORE_CSS_PARTS.map(fetchText))).join("");
       const style = document.createElement("style");
       style.textContent = css;
       document.head.appendChild(style);
 
-      const code = (await Promise.all(V6_APP_PARTS.map(fetchText))).join("");
-      const script = document.createElement("script");
-      script.textContent = code;
-      document.body.appendChild(script);
+      const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
+      const core = document.createElement("script");
+      core.textContent = code;
+      document.body.appendChild(core);
+
+      const patchCode = await fetchText("v7/patch.js");
+      const patch = document.createElement("script");
+      patch.textContent = patchCode;
+      document.body.appendChild(patch);
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
