@@ -59,14 +59,20 @@
       document.body.appendChild(diagnostics);
 
       const desktopCss = await fetchText("desktop/desktop.css");
+      const desktopProCss = await fetchText("desktop/pro.css");
       const desktopStyle = document.createElement("style");
-      desktopStyle.textContent = desktopCss;
+      desktopStyle.textContent = desktopCss + "\n" + desktopProCss;
       document.head.appendChild(desktopStyle);
 
       const desktopCode = await fetchText("desktop/desktop.js");
       const desktopScript = document.createElement("script");
       desktopScript.textContent = desktopCode;
       document.body.appendChild(desktopScript);
+
+      const desktopProCode = await fetchText("desktop/pro.js");
+      const desktopProScript = document.createElement("script");
+      desktopProScript.textContent = desktopProCode;
+      document.body.appendChild(desktopProScript);
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
