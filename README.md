@@ -1,4 +1,4 @@
-# KPOS Mobile V7
+# KPOS Mobile V8
 
 KPOS Mobile là **1 app duy nhất** cho bán hàng và quản lý khách hàng, tối ưu điện thoại với giao diện **CAM – TRẮNG**.
 
@@ -16,28 +16,39 @@ KPOS Mobile là **1 app duy nhất** cho bán hàng và quản lý khách hàng,
 - Công nợ và thu tiền bằng tiền mặt/chuyển khoản.
 - Mẫu in K80/A4 cho hóa đơn và phiếu bảo hành, có review khi chỉnh.
 - Backup/khôi phục dữ liệu JSON.
+- Hủy hóa đơn hoàn tồn kho + IMEI và điều chỉnh công nợ.
 
-## Bổ sung trong V7
+## Bổ sung trong V8
 
-- Cài đặt thông tin cửa hàng/công ty để dùng trên mẫu in.
-- Chọn K80/A4 mặc định cho hóa đơn và phiếu bảo hành.
-- Ngày giờ bán có thể điều chỉnh ngay lúc thanh toán.
-- Hủy hóa đơn an toàn: hoàn tồn kho, hoàn IMEI về kho, điều chỉnh công nợ/doanh thu và đánh dấu thanh toán liên quan đã hủy.
-- Lưu lý do + thời điểm hủy hóa đơn.
-- Xóa sản phẩm chỉ khi chưa có lịch sử hóa đơn.
-- Dashboard và báo cáo tự loại hóa đơn/thanh toán đã hủy.
+- Chuẩn bị backend Supabase cho database online.
+- Supabase Auth: đăng nhập bằng email + mật khẩu thật.
+- Row Level Security theo workspace/người dùng.
+- Một tài khoản có thể đăng nhập trên nhiều điện thoại.
+- Đồng bộ state online giữa các thiết bị.
+- Realtime nhận thay đổi từ điện thoại khác.
+- Khi mất mạng vẫn lưu localStorage trên máy; có mạng lại sẽ đồng bộ.
+- Màn hình Cài đặt hiển thị trạng thái cloud, workspace, revision và nút Đồng bộ ngay.
+- Có luồng tạo tài khoản lần đầu.
 
-## Tài khoản test
+## File backend
 
-- Tài khoản: `admin`
-- Mật khẩu: `123456`
+- `supabase/schema.sql`: bảng, trigger tạo workspace, RLS và Realtime.
+- `supabase/config.js`: Project URL + anon/public key.
+- `v8/patch.js`: Auth + cloud sync + realtime.
+
+## Cấu hình Supabase
+
+1. Tạo/chọn project Supabase.
+2. Chạy toàn bộ `supabase/schema.sql` trong SQL Editor.
+3. Lấy Project URL và anon/public key.
+4. Điền vào `supabase/config.js`.
+5. Không bao giờ đưa `service_role` key vào frontend.
+6. Mở lại app GitHub Pages và tạo tài khoản bằng email/mật khẩu.
 
 ## Link ứng dụng
 
 `https://trongkhasmartpos-ship-it.github.io/kpos-mobile/`
 
-## Dữ liệu hiện tại
+## Chế độ an toàn
 
-V7 vẫn dùng `localStorage` trên từng thiết bị. Dữ liệu chưa tự đồng bộ giữa nhiều điện thoại.
-
-Bước production tiếp theo là kết nối database online để đăng nhập thật, đồng bộ nhiều thiết bị, lưu ảnh cloud và phân quyền nhân viên.
+Nếu `supabase/config.js` chưa có Project URL/anon key, app vẫn chạy ở chế độ offline để không chặn việc test. Khi cấu hình Supabase xong, app tự chuyển sang đăng nhập online.
