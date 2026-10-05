@@ -52,6 +52,11 @@
       const patch8 = document.createElement("script");
       patch8.textContent = patch8Code;
       document.body.appendChild(patch8);
+
+      const diagnosticsCode = await fetchText("v8/diagnostics.js");
+      const diagnostics = document.createElement("script");
+      diagnostics.textContent = diagnosticsCode;
+      document.body.appendChild(diagnostics);
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
