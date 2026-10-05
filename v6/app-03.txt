@@ -1,0 +1,198 @@
+ cáo CRM","Tình trạng pipeline chăm sóc")}<div class="content">${crmTabs("crmReports")}<div class="grid two">${statuses.map(s=>stat(s,db.customers.filter(c=>c.status===s).length)).join("")}</div></div>${nav()}`;
+}
+
+
+/* ================= PRINT TEMPLATES ================= */
+function printTabs(active){return `<div class="seg" style="margin-bottom:12px">${[["sale","Hóa đơn bán hàng"],["warranty","Phiếu bảo hành"]].map(([v,l])=>`<button class="${active===v?"active":""}" onclick="setPrintDocType('${v}')">${l}</button>`).join("")}</div>`}
+function printsView(){const type=state.printDocType||"sale",list=getTemplates(type);return `${topbar("Mẫu in","K80 • A4 • Review trực tiếp khi chỉnh")}<div class="content">${printTabs(type)}<div class="template-grid">${list.map(t=>`<div class="template-card"><div class="row-between"><div><span class="template-chip">${t.paper}</span><h3 style="margin:8px 0 4px">${esc(t.name)}</h3><div class="small muted">${esc(t.desc||"")}</div></div><button class="btn ghost small" onclick="openTemplateEditor('${t.id}')">Chỉnh</button></div><div class="template-toolbar"><button class="btn primary small" onclick="previewTemplate('${t.id}')">Xem trước</button><button class="btn ghost small" onclick="openTemplateEditor('${t.id}')">Review khi chỉnh</button></div></div>`).join("")}</div></div>${nav()}`}
+
+/* ================= MORE / SETTINGS ================= */
+function moreView(){
+  const items=[
+    ["📦","Sản phẩm","products"],["👤","Khách hàng đã mua / lịch sử","customers"],["🔢","IMEI / Serial","imei"],["🖨️","Mẫu in","prints"],["🧾","Hóa đơn","invoices"],["📥","Nhập hàng","stock"],
+    ["📚","Lịch sử kho","inventory"],["💰","Công nợ","debts"],["💵","Thu tiền","payments"],["📊","Báo cáo bán hàng","reports"],["⚙️","Cài đặt","settings"]
+  ];
+  return `${topbar("Thêm","Danh mục quản lý")}<div class="content"><div class="grid">${items.map(([i,n,s])=>`<button class="card row-between" style="border:0;text-align:left" onclick="go('${s}')"><b>${i} ${n}</b><span>›</span></button>`).join("")}</div></div>${nav()}`;
+}
+function settingsView(){
+  return `${topbar("Cài đặt","KPOS Mobile V6")}<div class="content">
+    <div class="card"><b>KPOS Mobile V6</b><p class="muted small">Bản V6 dùng 1 app KPOS duy nhất, đồng bộ luồng Bán hàng → IMEI → Khách hàng → Bảo hành → CRM.</p>
+    <div class="notice">Đã có cấu trúc dữ liệu cho sản phẩm, khách, hóa đơn, thanh toán, IMEI, bảo hành và lịch sử kho.</div>
+    <button class="btn ghost block" style="margin-top:12px" onclick="exportData()">Xuất dữ liệu JSON</button><button class="btn ghost block" style="margin-top:9px" onclick="importData()">Khôi phục từ JSON</button>
+    <button class="btn danger block" style="margin-top:9px" onclick="resetData()">Xóa dữ liệu test & khôi phục mẫu</button></div>
+  </div>${nav()}`;
+}
+window.exportData=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="kpos-mobile-v6-backup.json";a.click();URL.revokeObjectURL(a.href)}
+window.importData=()=>{const input=document.createElement("input");input.type="file";input.accept="application/json";input.onchange=()=>{const f=input.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{db=normalizeDB(JSON.parse(r.result));saveDB();toast("Khôi phục dữ liệu thành công");render()}catch(e){toast("File dữ liệu không hợp lệ")}};r.readAsText(f)};input.click()}
+window.resetData=()=>{if(confirm("Khôi phục toàn bộ dữ liệu mẫu V6?")){localStorage.removeItem(DBKEY);db=clone(seed);saveDB();state.activeCustomer=null;render()}}
+
+/* ================= SCANNER ================= */
+async function openScanner(target,context=null,continuous=false){
+  state.scanTarget=target;state.scanContext=context;state.scannerContinuous=continuous;state.scanFeed=[];
+  state.scanReturn=state.modal && state.modal.type!=="scanner"?state.modal:null;
+  state.modal={type:"scanner",stream:null};render();setTimeout(startCameraScanner,100);
+}
+window.openScanner=openScanner;
+async function startCameraScanner(){
+  const video=$("#scannerVideo"),msg=$("#scannerMsg");if(!video)return;
+  if(!navigator.mediaDevices?.getUserMedia){msg.textContent="Trình duyệt không hỗ trợ camera. Hãy nhập mã thủ công.";return}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}});
+    video.srcObject=stream;state.modal.stream=stream;await video.play();
+    if("BarcodeDetector" in window){
+      let detector;try{detector=new BarcodeDetector({formats:["ean_13","ean_8","code_128","qr_code","upc_a","upc_e"]})}catch(e){detector=new BarcodeDetector()}
+      let last="",lastAt=0;
+      const loop=async()=>{
+        if(state.modal?.type!=="scanner")return;
+        try{
+          const codes=await detector.detect(video);
+          if(codes.length){
+            const raw=codes[0].rawValue,now=Date.now();
+            if(raw!==last || now-lastAt>1500){
+              last=raw;lastAt=now;
+              if(state.scannerContinuous){handleContinuousScan(raw)}else{acceptScan(raw);return}
+            }
+          }
+        }catch(e){}
+        requestAnimationFrame(loop);
+      };loop();
+    }else msg.textContent="Camera đang mở. Trình duyệt chưa hỗ trợ tự đọc barcode; có thể nhập mã thủ công.";
+  }catch(e){msg.textContent="Không mở được camera. Hãy cấp quyền camera hoặc nhập mã thủ công."}
+}
+
+function handleContinuousScan(v){
+  const exists=state.scanFeed.some(x=>x.code===v);
+  if(exists){
+    state.scanFeed.unshift({code:v,status:"Trùng",time:new Date().toISOString()});
+    state.scanFeed=state.scanFeed.slice(0,20);renderScannerFeed();return;
+  }
+  let ok=false,label="";
+  if(state.scanTarget==="stockContinuous"){
+    const back=state.scanReturn;
+    const p=findProductByCode(v);
+    if(p&&back?.type==="stockReceipt"){
+      let it=back.items.find(x=>x.productId===p.id);
+      if(it)it.qty++;else back.items.push({productId:p.id,qty:1,imeis:[]});
+      ok=true;label=p.name;
+    }
+  }else if(state.scanTarget==="imeiContinuous"){
+    const back=state.scanReturn;
+    if(back?.type==="stockImeis"){
+      const receipt=back.receipt,it=receipt.items.find(x=>x.productId===back.productId);
+      if(!db.imeis.some(i=>i.value===v)&&!back.imeis.includes(v)&&back.imeis.length<it.qty){
+        back.imeis.push(v);ok=true;label="IMEI";
+      }
+    }
+  }
+  state.scanFeed.unshift({code:v,status:ok?"Hoàn thành":"Không nhận",label,time:new Date().toISOString()});
+  state.scanFeed=state.scanFeed.slice(0,20);renderScannerFeed();
+}
+function renderScannerFeed(){
+  const el=$("#scanFeed");if(!el)return;
+  el.innerHTML=state.scanFeed.map(x=>`<div class="scan-row"><div><div class="scan-code">${esc(x.code)}</div><div class="small muted">${esc(x.label||"")}</div></div><div class="${x.status==="Hoàn thành"?"scan-ok":x.status==="Trùng"?"scan-dup":"danger-text"}">${x.status==="Hoàn thành"?"✓ Đã nhận":x.status}</div></div>`).join("");
+}
+window.finishContinuousScan=()=>{stopScanner();const back=state.scanReturn;state.scanReturn=null;state.scannerContinuous=false;state.modal=back||null;render()}
+
+function stopScanner(){try{state.modal?.stream?.getTracks().forEach(t=>t.stop())}catch(e){}}
+window.closeModal=()=>{stopScanner();state.modal=null;state.scanReturn=null;state.scanContext=null;render()}
+window.acceptScan=(value=null)=>{
+  const v=(value||$("#scannerManual")?.value||"").trim();if(!v)return;
+  const target=state.scanTarget,back=state.scanReturn,ctx=state.scanContext;
+  stopScanner();state.scanReturn=null;state.scanContext=null;
+
+  if(target==="pos"){state.modal=null;const p=findProductByCode(v);if(p){addCart(p.id);return}render();toast("Không tìm thấy sản phẩm");return}
+  if(target==="productSearch"){state.modal=null;state.screen="products";render();setTimeout(()=>{$("#productSearch").value=v;filterProducts()},0);return}
+  if(target==="productForm"&&back?.type==="productForm"){back.p.barcode=v;state.modal=back;render();return}
+  if(target==="imei"){state.modal=null;state.screen="imei";render();setTimeout(()=>{$("#imeiSearch").value=v;filterImeis()},0);return}
+  if(target==="warrantySearch"){
+    const im=db.imeis.find(i=>i.value===v);state.modal=null;
+    if(im){openWarrantyForm(v);return}
+    state.screen="warranty";render();setTimeout(()=>{$("#wSearch").value=v;filterWarranties()},0);return;
+  }
+  if(target==="warrantyForm"&&back?.type==="warrantyForm"){hydrateWarrantyDraft(back.draft,v);state.modal=back;render();return}
+  if(target==="stock"){
+    state.modal=back?.type==="stockReceipt"?back:{type:"stockReceipt",items:[],supplier:"",note:""};
+    const p=findProductByCode(v);
+    if(p){let it=state.modal.items.find(x=>x.productId===p.id);if(it)it.qty++;else state.modal.items.push({productId:p.id,qty:1,imeis:[]});render()}
+    else{render();toast("Không tìm thấy sản phẩm")}return;
+  }
+  if(target==="stockImei"&&back?.type==="stockImeis"){state.modal=back;addStockImeiValue(v);return}
+  state.modal=back||null;render();
+}
+
+/* ================= MODALS ================= */
+function sheet(title,body){return `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="sheet"><div class="sheet-head"><div class="sheet-title">${title}</div><button class="close" onclick="closeModal()">×</button></div>${body}</div></div>`}
+function modalView(){
+  if(!state.modal)return "";
+  const m=state.modal;
+
+  if(m.type==="productForm"){
+    const p=m.p;return sheet(m.editing?"Sửa sản phẩm":"Thêm sản phẩm",`
+      <div class="field"><label>Tên sản phẩm *</label><input id="pf_name" value="${esc(p.name)}" placeholder="VD: Máy POS SUNMI D2"></div>
+      <div class="form-row"><div class="field"><label>Tên viết tắt</label><input id="pf_short" value="${esc(p.short||"")}"></div><div class="field"><label>SKU</label><input id="pf_sku" value="${esc(p.sku||"")}"></div></div>
+      <div class="field"><label>Từ khóa tìm kiếm</label><input id="pf_keywords" value="${esc(p.keywords||"")}" placeholder="sunmi, pos, máy tính tiền"></div>
+      <div class="field"><label>Mã vạch</label><div class="searchrow" style="margin:0"><input id="pf_barcode" value="${esc(p.barcode||"")}" placeholder="Quét hoặc nhập barcode"><button class="btn accent" onclick="openScanner('productForm')">📷</button></div></div>
+      <div class="form-row"><div class="field"><label>Giá vốn</label><input id="pf_cost" type="number" value="${p.cost||0}"></div><div class="field"><label>Giá bán</label><input id="pf_price" type="number" value="${p.price||0}"></div></div>
+      <div class="form-row"><div class="field"><label>Tồn kho</label><input id="pf_stock" type="number" value="${p.stock||0}"></div><div class="field"><label>Tồn tối thiểu</label><input id="pf_minStock" type="number" value="${p.minStock||0}"></div></div>
+      <div class="field"><label><input id="pf_imei" type="checkbox" ${p.imeiEnabled?"checked":""}> Quản lý IMEI / Serial</label></div>
+      <div class="field"><label>Bảo hành (tháng)</label><input id="pf_warranty" type="number" value="${p.warranty||0}"></div>
+      <div class="field"><label>Hình ảnh hàng hóa</label><button class="btn ghost block" onclick="pickImages()">📷 Chụp / chọn nhiều ảnh</button>
+        <div class="photo-grid">${(p.images||[]).map((im,i)=>`<div style="position:relative"><img class="photo" src="${im}"><button onclick="removeImage(${i})" style="position:absolute;right:3px;top:3px;border:0;border-radius:50%;width:24px;height:24px">×</button></div>`).join("")}</div>
+      </div>
+      <button class="btn primary block" onclick="saveProduct()">LƯU SẢN PHẨM</button>`);
+  }
+
+  if(m.type==="productDetail"){
+    const p=m.p,moves=db.inventoryMovements.filter(x=>x.productId===p.id).slice(0,10),ims=db.imeis.filter(i=>i.productId===p.id);
+    return sheet("Chi tiết sản phẩm",`
+      <div class="photo-grid">${(p.images||[]).map(im=>`<img class="photo" src="${im}">`).join("")||'<div class="empty">Chưa có ảnh</div>'}</div>
+      <h3>${esc(p.name)}</h3><div class="muted small">${esc(p.sku)} • ${esc(p.barcode||"")}</div>
+      <div class="info-grid" style="margin-top:12px"><div class="info-box"><div class="k">GIÁ BÁN</div><div class="v">${money(p.price)}</div></div><div class="info-box"><div class="k">TỒN KHO</div><div class="v">${p.stock}</div></div><div class="info-box"><div class="k">IMEI TRONG KHO</div><div class="v">${availableImeis(p.id).length}</div></div><div class="info-box"><div class="k">BẢO HÀNH</div><div class="v">${p.warranty||0} tháng</div></div></div>
+      ${p.imeiEnabled?`<div class="section-title">IMEI / Serial</div><div class="taglist">${ims.slice(0,20).map(i=>`<span class="imei-tag">${esc(i.value)} • ${esc(i.status)}</span>`).join("")||"Chưa có"}</div>`:""}
+      <div class="section-title">Lịch sử kho</div><div class="timeline">${moves.map(x=>`<div class="tl"><b>${x.qty>=0?"+":""}${x.qty} • ${esc(x.code)}</b><div class="small muted">${fmtDateTime(x.date)} • Tồn ${x.balance}</div></div>`).join("")||'<div class="empty">Chưa có lịch sử</div>'}</div>
+      <button class="btn primary block" onclick="closeModal();openProductForm(${p.id})">SỬA SẢN PHẨM</button>`);
+  }
+
+  if(m.type==="imeiSelector"){
+    const p=product(m.productId),c=db.cart.find(x=>x.productId===m.productId),list=availableImeis(m.productId);
+    return sheet(`Chọn IMEI • ${p.name}`,`
+      <div class="notice">Cần chọn <b>${c.qty}</b> IMEI. Đã chọn <b>${m.selected.length}/${c.qty}</b>.</div>
+      <div class="checklist" style="margin-top:12px">${list.map(i=>`<label class="checkrow"><input type="checkbox" ${m.selected.includes(i.id)?"checked":""} onchange="toggleImeiSelect(${i.id})"><div><b class="mono">${esc(i.value)}</b><div class="small muted">Trong kho từ ${fmtDate(i.receivedDate)}</div></div></label>`).join("")||'<div class="empty">Không còn IMEI trong kho.</div>'}</div>
+      <button class="btn primary block" style="margin-top:14px" onclick="saveImeiSelection()">XÁC NHẬN IMEI</button>`);
+  }
+
+  if(m.type==="checkout"){
+    const subtotal=cartTotal(),total=Math.max(0,subtotal-(m.discount||0)+(m.surcharge||0));
+    return sheet("Thanh toán",`
+      <div class="checkout-summary"><div><div class="small muted">Tổng thành tiền</div><b>${money(subtotal)}</b></div><div style="text-align:right"><div class="small muted">Khách hàng</div><b>${esc(state.activeCustomer?.name||"Khách lẻ")}</b></div></div>
+      <div class="field"><label>Ngày bán</label><input value="${fmtDateTime(new Date())}" disabled></div>
+      <div class="form-row"><div class="field"><label>Giảm giá</label><input id="co_discount" type="number" value="${m.discount||0}" oninput="state.modal.discount=Number(this.value)||0;render()"></div><div class="field"><label>Phụ thu</label><input id="co_surcharge" type="number" value="${m.surcharge||0}" oninput="state.modal.surcharge=Number(this.value)||0;render()"></div></div>
+      <div class="checkout-payable"><span>KHÁCH PHẢI TRẢ</span><b>${money(total)}</b></div>
+      <div class="field"><label>Phương thức thanh toán</label><select id="co_method"><option ${m.method==="Tiền mặt"?"selected":""}>Tiền mặt</option><option ${m.method==="Chuyển khoản"?"selected":""}>Chuyển khoản</option></select></div>
+      <div class="field"><label>Khách thanh toán</label><input id="co_paid" type="number" value="${m.paid||total}" min="0" max="${total}"></div>
+      <div class="notice">Trả thiếu sẽ tự ghi <b>công nợ</b>. Đơn có công nợ phải chọn khách hàng.</div>
+      <div class="split-buttons" style="margin-top:12px"><button class="btn ghost" onclick="closeModal()">QUAY LẠI</button><button class="btn success" onclick="finishCheckout()">THANH TOÁN</button></div>`);
+  }
+
+  if(m.type==="success"){
+    return sheet("Thanh toán thành công",`<div class="empty"><div style="font-size:54px">✅</div><h3>${m.invoice.code}</h3><div class="total">${money(m.invoice.total)}</div>${m.invoice.debt?`<div class="badge red" style="margin-top:8px">Công nợ ${money(m.invoice.debt)}</div>`:""}</div><div class="split-buttons"><button class="btn ghost" onclick="previewTemplate('sale_k80','invoice',${m.invoice.id})">XEM K80</button><button class="btn primary" onclick="previewTemplate('sale_a4','invoice',${m.invoice.id})">XEM A4</button></div><button class="btn success block" style="margin-top:10px" onclick="closeModal()">BÁN ĐƠN MỚI</button>`);
+  }
+
+  if(m.type==="customerForm"){
+    const c=m.c;return sheet(m.editing?"Sửa khách hàng":"Thêm khách hàng",`
+      <div class="field"><label>Họ tên *</label><input id="cf_name" value="${esc(c.name)}"></div>
+      <div class="form-row"><div class="field"><label>SĐT 1</label><input id="cf_phone" value="${esc(c.phone)}"></div><div class="field"><label>SĐT 2</label><input id="cf_phone2" value="${esc(c.phone2||"")}"></div></div>
+      <div class="field"><label>Email</label><input id="cf_email" value="${esc(c.email||"")}"></div>
+      <div class="field"><label>Địa chỉ</label><input id="cf_address" value="${esc(c.address||"")}"></div>
+      <div class="form-row"><div class="field"><label>Nguồn khách</label><input id="cf_source" value="${esc(c.source||"")}"></div><div class="field"><label>Trạng thái CRM</label><select id="cf_status">${["Khách mới","Chưa liên hệ","Đã liên hệ","Đang tư vấn","Đã mua hàng","Khách cũ","Ngừng chăm sóc"].map(x=>`<option ${x===c.status?"selected":""}>${x}</option>`).join("")}</select></div></div>
+      <div class="field"><label>Ghi chú</label><textarea id="cf_note" rows="4">${esc(c.note||"")}</textarea></div>
+      <button class="btn primary block" onclick="saveCustomer()">LƯU KHÁCH HÀNG</button>`);
+  }
+
+  if(m.type==="customerPicker"){
+    return sheet("Chọn khách hàng",`<div class="list">${db.customers.map(c=>`<button class="item" style="border:1px solid #eef0f5;text-align:left" onclick="selectCustomer(${c.id})"><div class="thumb">👤</div><div class="item-main"><div class="item-title">${esc(c.name)}</div><div class="item-sub">${esc(c.phone)}</div></div>${c.debt?`<span class="badge red">Nợ ${money(c.debt)}</span>`:""}</button>`).join("")}</div>`);
+  }
+
+  if(m.type==="customerDetail"){
+    const c=m.c,tab=m.tab||"orders";
+    const invs
