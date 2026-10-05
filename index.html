@@ -31,53 +31,32 @@
       if(!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
       return response.text();
     }
+    function injectScript(code){
+      const s=document.createElement("script");s.textContent=code;document.body.appendChild(s);
+    }
 
     (async()=>{
       const css = (await Promise.all(CORE_CSS_PARTS.map(fetchText))).join("");
+      const desktopCss = await fetchText("desktop/desktop.css");
+      const desktopProCss = await fetchText("desktop/pro.css");
+      const businessCss = await fetchText("desktop/business.css");
       const style = document.createElement("style");
-      style.textContent = css;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
-      const core = document.createElement("script");
-      core.textContent = code;
-      document.body.appendChild(core);
+      injectScript(code);
+      injectScript(await fetchText("v7/patch.js"));
 
-      const patch7Code = await fetchText("v7/patch.js");
-      const patch7 = document.createElement("script");
-      patch7.textContent = patch7Code;
-      document.body.appendChild(patch7);
+      /* Desktop/business được nạp trước V8 để mọi callback cloud dùng đúng renderer responsive. */
+      injectScript(await fetchText("desktop/desktop.js"));
+      injectScript(await fetchText("desktop/pro.js"));
+      injectScript(await fetchText("desktop/pro-fix.js"));
+      injectScript(await fetchText("desktop/sales.js"));
+      injectScript(await fetchText("desktop/ops.js"));
 
-      const patch8Code = await fetchText("v8/patch.js");
-      const patch8 = document.createElement("script");
-      patch8.textContent = patch8Code;
-      document.body.appendChild(patch8);
-
-      const diagnosticsCode = await fetchText("v8/diagnostics.js");
-      const diagnostics = document.createElement("script");
-      diagnostics.textContent = diagnosticsCode;
-      document.body.appendChild(diagnostics);
-
-      const desktopCss = await fetchText("desktop/desktop.css");
-      const desktopProCss = await fetchText("desktop/pro.css");
-      const desktopStyle = document.createElement("style");
-      desktopStyle.textContent = desktopCss + "\n" + desktopProCss;
-      document.head.appendChild(desktopStyle);
-
-      const desktopCode = await fetchText("desktop/desktop.js");
-      const desktopScript = document.createElement("script");
-      desktopScript.textContent = desktopCode;
-      document.body.appendChild(desktopScript);
-
-      const desktopProCode = await fetchText("desktop/pro.js");
-      const desktopProScript = document.createElement("script");
-      desktopProScript.textContent = desktopProCode;
-      document.body.appendChild(desktopProScript);
-
-      const desktopProFixCode = await fetchText("desktop/pro-fix.js");
-      const desktopProFixScript = document.createElement("script");
-      desktopProFixScript.textContent = desktopProFixCode;
-      document.body.appendChild(desktopProFixScript);
+      injectScript(await fetchText("v8/patch.js"));
+      injectScript(await fetchText("v8/diagnostics.js"));
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
