@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-logo-v1-pack-1";
+const CACHE="kpos-mobile-v8-pos-brand-scope-fix-1";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg","./icons/kpos-logo.png",
   "./supabase/config.js",
@@ -15,6 +15,7 @@ const ASSETS=[
   "./desktop/dashboard-v2.css","./desktop/dashboard-v2.js",
   "./desktop/pos-v2.css","./desktop/pos-v2.js","./desktop/pos-v3.css","./desktop/pos-v3.js",
   "./desktop/pos-layout-v4.css","./desktop/pos-layout-v4.js",
+  "./desktop/branding-scope-fix.css","./desktop/branding-scope-fix.js",
   "./desktop/invoice-v2.css","./desktop/invoice-v2.js",
   "./desktop/catalog-v2.css","./desktop/catalog-v2-final.js",
   "./desktop/crm-v2.css","./desktop/crm-v2.js",
