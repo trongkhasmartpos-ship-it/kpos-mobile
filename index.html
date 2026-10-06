@@ -21,7 +21,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-design-system-v1-pack-1";
+    const BUILD = "20261006-print-agent-v1-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -61,17 +61,16 @@
       const reportsV2Css = await fetchText("desktop/reports-v2.css");
       const printV2Css = await fetchText("desktop/print-v2.css");
       const settingsV2Css = await fetchText("desktop/settings-v2.css");
-      /* Design system luôn nạp cuối để đồng bộ font, màu, input, button, card, table và modal. */
       const designSystemCss = await fetchText("desktop/design-system-v1.css");
+      const printAgentCss = await fetchText("desktop/print-agent.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css + "\n" + printV2Css + "\n" + settingsV2Css + "\n" + designSystemCss;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css + "\n" + printV2Css + "\n" + settingsV2Css + "\n" + designSystemCss + "\n" + printAgentCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
       injectScript(code);
       injectScript(await fetchText("v7/patch.js"));
 
-      /* Desktop/business được nạp trước V8 để mọi callback cloud dùng đúng renderer responsive. */
       injectScript(await fetchText("desktop/desktop.js"));
       injectScript(await fetchText("desktop/pro.js"));
       injectScript(await fetchText("desktop/pro-fix.js"));
@@ -85,12 +84,10 @@
 
       injectScript(await fetchText("v8/patch.js"));
       injectScript(await fetchText("v8/diagnostics.js"));
-      /* Nạp các lớp nghiệp vụ cuối để giữ renderer, bộ lọc và kho nâng cao mới nhất. */
       injectScript(await fetchText("desktop/system-audit.js"));
       injectScript(await fetchText("desktop/operations-v2.js"));
       injectScript(await fetchText("desktop/inventory-pro.js"));
       injectScript(await fetchText("desktop/final-audit.js"));
-      /* Chốt từng màn hình: Tổng quan -> POS -> Hóa đơn -> Sản phẩm/Kho -> Khách hàng/CRM -> Bảo hành -> Báo cáo -> Mẫu in -> Cài đặt. */
       injectScript(await fetchText("desktop/dashboard-v2.js"));
       injectScript(await fetchText("desktop/pos-v2.js"));
       injectScript(await fetchText("desktop/pos-v3.js"));
@@ -101,6 +98,8 @@
       injectScript(await fetchText("desktop/reports-v2.js"));
       injectScript(await fetchText("desktop/print-v2.js"));
       injectScript(await fetchText("desktop/settings-v2.js"));
+      /* Print Agent nạp cuối để gắn Test Agent/Test máy in/In thử và Thanh toán & In vào POS hiện tại. */
+      injectScript(await fetchText("desktop/print-agent.js"));
       render();
     })().catch(error=>{
       console.error(error);
