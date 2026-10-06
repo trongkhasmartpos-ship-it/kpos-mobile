@@ -10,6 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="supabase/config.js"></script>
 </head>
 <body>
@@ -20,7 +21,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-operations-v2-pack-1";
+    const BUILD = "20261006-inventory-pro-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -49,8 +50,9 @@
       const tableCss = await fetchText("desktop/table-pack.css");
       const auditCss = await fetchText("desktop/system-audit.css");
       const operationsCss = await fetchText("desktop/operations-v2.css");
+      const inventoryProCss = await fetchText("desktop/inventory-pro.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -71,9 +73,10 @@
 
       injectScript(await fetchText("v8/patch.js"));
       injectScript(await fetchText("v8/diagnostics.js"));
-      /* Kiểm tra hệ thống trước, operations V2 nạp cuối để giữ renderer và bộ lọc mới nhất. */
+      /* Nạp các lớp nghiệp vụ cuối để giữ renderer, bộ lọc và kho nâng cao mới nhất. */
       injectScript(await fetchText("desktop/system-audit.js"));
       injectScript(await fetchText("desktop/operations-v2.js"));
+      injectScript(await fetchText("desktop/inventory-pro.js"));
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
