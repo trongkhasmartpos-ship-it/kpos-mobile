@@ -21,7 +21,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-catalog-v2-pack-1";
+    const BUILD = "20261006-crm-v2-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -56,8 +56,9 @@
       const posV3Css = await fetchText("desktop/pos-v3.css");
       const invoiceV2Css = await fetchText("desktop/invoice-v2.css");
       const catalogV2Css = await fetchText("desktop/catalog-v2.css");
+      const crmV2Css = await fetchText("desktop/crm-v2.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -83,12 +84,13 @@
       injectScript(await fetchText("desktop/operations-v2.js"));
       injectScript(await fetchText("desktop/inventory-pro.js"));
       injectScript(await fetchText("desktop/final-audit.js"));
-      /* Chốt từng màn hình: Tổng quan -> POS -> Hóa đơn -> Sản phẩm/Kho. */
+      /* Chốt từng màn hình: Tổng quan -> POS -> Hóa đơn -> Sản phẩm/Kho -> Khách hàng/CRM. */
       injectScript(await fetchText("desktop/dashboard-v2.js"));
       injectScript(await fetchText("desktop/pos-v2.js"));
       injectScript(await fetchText("desktop/pos-v3.js"));
       injectScript(await fetchText("desktop/invoice-v2.js"));
       injectScript(await fetchText("desktop/catalog-v2-final.js"));
+      injectScript(await fetchText("desktop/crm-v2.js"));
       render();
     })().catch(error=>{
       console.error(error);
