@@ -40,8 +40,9 @@
       const desktopCss = await fetchText("desktop/desktop.css");
       const desktopProCss = await fetchText("desktop/pro.css");
       const businessCss = await fetchText("desktop/business.css");
+      const finishCss = await fetchText("desktop/finish.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -54,6 +55,7 @@
       injectScript(await fetchText("desktop/pro-fix.js"));
       injectScript(await fetchText("desktop/sales.js"));
       injectScript(await fetchText("desktop/ops.js"));
+      injectScript(await fetchText("desktop/finish.js"));
 
       injectScript(await fetchText("v8/patch.js"));
       injectScript(await fetchText("v8/diagnostics.js"));
