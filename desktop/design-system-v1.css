@@ -1,0 +1,267 @@
+/* KPOS Design System V1
+   Unified typography, colors, spacing and controls across desktop + mobile.
+   Presentation only: no business logic changes.
+*/
+:root{
+  --kpos-font:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --kpos-bg:#f6f7f9;
+  --kpos-surface:#ffffff;
+  --kpos-surface-soft:#f8fafc;
+  --kpos-text:#111827;
+  --kpos-text-2:#334155;
+  --kpos-muted:#64748b;
+  --kpos-line:#e2e8f0;
+  --kpos-line-strong:#cbd5e1;
+  --kpos-primary:#f97316;
+  --kpos-primary-hover:#ea580c;
+  --kpos-primary-soft:#fff7ed;
+  --kpos-primary-line:#fed7aa;
+  --kpos-success:#059669;
+  --kpos-success-soft:#ecfdf5;
+  --kpos-danger:#dc2626;
+  --kpos-danger-soft:#fef2f2;
+  --kpos-warning:#d97706;
+  --kpos-warning-soft:#fffbeb;
+  --kpos-radius-xs:8px;
+  --kpos-radius-sm:10px;
+  --kpos-radius:12px;
+  --kpos-radius-lg:16px;
+  --kpos-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 14px rgba(15,23,42,.035);
+  --kpos-shadow-float:0 18px 48px rgba(15,23,42,.16);
+  --kpos-control-h:42px;
+  --kpos-gap:12px;
+
+  /* Map legacy tokens to one visual language */
+  --bg:var(--kpos-bg);
+  --card:var(--kpos-surface);
+  --text:var(--kpos-text);
+  --muted:var(--kpos-muted);
+  --line:var(--kpos-line);
+  --primary:var(--kpos-primary);
+  --primary2:var(--kpos-primary-hover);
+  --accent:var(--kpos-primary);
+  --orange:var(--kpos-primary);
+  --orange-dark:var(--kpos-primary-hover);
+  --orange-soft:var(--kpos-primary-soft);
+  --orange-line:var(--kpos-primary-line);
+  --danger:var(--kpos-danger);
+  --success:var(--kpos-success);
+  --warn:var(--kpos-warning);
+  --shadow:var(--kpos-shadow);
+  --radius:var(--kpos-radius-lg);
+  --desk-bg:var(--kpos-bg);
+  --desk-line:var(--kpos-line);
+  --desk-orange:var(--kpos-primary);
+  --desk-text:var(--kpos-text);
+  --desk-muted:var(--kpos-muted);
+}
+
+html,body,#app{font-family:var(--kpos-font);color:var(--kpos-text);background:var(--kpos-bg)}
+body{font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select,textarea{font-family:var(--kpos-font);color:var(--kpos-text)}
+button{font-weight:700}
+::placeholder{color:#94a3b8;opacity:1}
+
+/* Typography */
+.title,.desktop-topbar h1{font-weight:800;letter-spacing:-.02em;color:var(--kpos-text)}
+.title{font-size:20px}.desktop-topbar h1{font-size:22px}
+.subtitle,.desktop-subtitle,.muted,.small{color:var(--kpos-muted)}
+.section-title{font-size:14px;font-weight:800;color:var(--kpos-text);letter-spacing:-.01em}
+h1,h2,h3,.sheet-title{letter-spacing:-.02em;color:var(--kpos-text)}
+.sheet-title{font-size:18px;font-weight:800}
+.item-title{font-weight:800;color:var(--kpos-text)}
+.price,.total{font-weight:800;color:var(--kpos-text)}
+
+/* Surfaces */
+.card,.soft-card,.crm-card,.template-card,.sv2-card,.dash2-panel,
+.rp2-panel,.inv2-panel,.cat2-panel,.crm2-panel,.war2-panel{
+  background:var(--kpos-surface);
+  border:1px solid var(--kpos-line)!important;
+  border-radius:var(--kpos-radius-lg)!important;
+  box-shadow:var(--kpos-shadow)!important;
+}
+.card{padding:16px}
+.notice{border:1px solid #dbeafe;background:#eff6ff;color:#1e3a8a;border-radius:var(--kpos-radius);font-size:13px}
+.notice.warning{border-color:#fde68a;background:var(--kpos-warning-soft);color:#92400e}
+.notice.success{border-color:#a7f3d0;background:var(--kpos-success-soft);color:#047857}
+
+/* Form controls */
+.field{gap:6px;margin-bottom:14px}
+.field label,
+.sv2-form-grid label,
+.pos3-compact-grid label,
+.pv2-controls label{font-size:12px;font-weight:700;color:var(--kpos-text-2)}
+.field input,.field select,.field textarea,
+.searchrow input,
+.sv2-form-grid input,.sv2-form-grid select,.sv2-form-grid textarea,
+.pos3-compact-grid input,.pos3-compact-grid select,.pos3-compact-grid textarea,
+.crm2-toolbar input,.crm2-filters select,
+.inv2-toolbar input,.inv2-toolbar select,
+.cat2-toolbar input,.cat2-toolbar select,
+.war2-toolbar input,.war2-toolbar select,
+.rp2-toolbar input,.rp2-toolbar select,
+.pv2-controls input,.pv2-controls select,.pv2-controls textarea{
+  width:100%;
+  min-height:var(--kpos-control-h);
+  border:1px solid var(--kpos-line-strong)!important;
+  border-radius:var(--kpos-radius)!important;
+  background:#fff!important;
+  padding:10px 12px!important;
+  outline:none;
+  box-shadow:none!important;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+textarea{resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus,
+.searchrow input:focus,
+.sv2-form-grid input:focus,.sv2-form-grid select:focus,.sv2-form-grid textarea:focus,
+.pos3-compact-grid input:focus,.pos3-compact-grid select:focus,.pos3-compact-grid textarea:focus,
+.crm2-toolbar input:focus,.crm2-filters select:focus,
+.inv2-toolbar input:focus,.inv2-toolbar select:focus,
+.cat2-toolbar input:focus,.cat2-toolbar select:focus,
+.war2-toolbar input:focus,.war2-toolbar select:focus,
+.rp2-toolbar input:focus,.rp2-toolbar select:focus,
+.pv2-controls input:focus,.pv2-controls select:focus,.pv2-controls textarea:focus{
+  border-color:#fb923c!important;
+  box-shadow:0 0 0 3px rgba(249,115,22,.12)!important;
+}
+input:disabled,select:disabled,textarea:disabled{background:#f1f5f9!important;color:#94a3b8;cursor:not-allowed}
+
+/* Buttons */
+.btn{
+  min-height:var(--kpos-control-h);
+  border-radius:var(--kpos-radius)!important;
+  padding:10px 14px;
+  font-size:13px;
+  font-weight:800;
+  box-shadow:none;
+  transition:background .15s ease,border-color .15s ease,transform .08s ease,box-shadow .15s ease;
+}
+.btn:active{transform:translateY(1px)}
+.btn.primary,.btn.accent{background:var(--kpos-primary)!important;color:#fff!important;border:1px solid var(--kpos-primary)!important}
+.btn.primary:hover,.btn.accent:hover{background:var(--kpos-primary-hover)!important;border-color:var(--kpos-primary-hover)!important}
+.btn.ghost{background:#fff!important;color:var(--kpos-text)!important;border:1px solid var(--kpos-line-strong)!important}
+.btn.ghost:hover{background:var(--kpos-surface-soft)!important;border-color:#94a3b8!important}
+.btn.success{background:var(--kpos-success)!important;color:#fff!important}
+.btn.danger{background:var(--kpos-danger)!important;color:#fff!important}
+.btn.small{min-height:34px;padding:7px 10px;border-radius:var(--kpos-radius-sm)!important;font-size:12px}
+
+/* Badges / states */
+.badge,.kpos-badge,.template-chip,.crm-status,.crm2-status{
+  border-radius:999px!important;
+  font-size:11px;
+  font-weight:800;
+  padding:5px 8px;
+}
+.badge{background:#f1f5f9;color:#475569}
+.badge.orange,.kpos-badge{background:var(--kpos-primary-soft)!important;color:#c2410c!important}
+.badge.green,.kpos-badge.green{background:var(--kpos-success-soft)!important;color:#047857!important}
+.badge.red{background:var(--kpos-danger-soft)!important;color:#b91c1c!important}
+
+/* Lists / rows */
+.item{border:1px solid var(--kpos-line)!important;border-radius:var(--kpos-radius)!important;box-shadow:none!important;background:#fff}
+.item:hover{border-color:#fdba74!important}
+.thumb{border-radius:var(--kpos-radius)!important;background:#f1f5f9}
+.list{gap:8px}
+.table-row{border-color:var(--kpos-line)}
+.table-head,.desktop-table-head{color:var(--kpos-muted);font-size:11px;font-weight:800;letter-spacing:.04em}
+
+/* Top bars and navigation */
+.topbar{background:rgba(246,247,249,.94);border-color:rgba(226,232,240,.9)}
+.desktop-topbar{background:rgba(255,255,255,.96);border-color:var(--kpos-line);min-height:72px;padding:10px 24px}
+.desktop-sidebar{background:#0f172a;box-shadow:6px 0 24px rgba(15,23,42,.07)}
+.desktop-brand-mark{border-radius:12px;background:var(--kpos-primary);box-shadow:none}
+.desktop-nav-btn{border-radius:10px;font-size:13px;font-weight:700;color:#cbd5e1}
+.desktop-nav-btn:hover{background:#1e293b;color:#fff}
+.desktop-nav-btn.active{background:var(--kpos-primary-soft);color:#c2410c}
+.desktop-nav-group{color:#64748b;font-size:10px;font-weight:800}
+.bottomnav{border-color:var(--kpos-line);box-shadow:0 -4px 18px rgba(15,23,42,.04)}
+.navitem{font-weight:700;color:var(--kpos-muted)}
+.navitem.active{color:var(--kpos-primary)}
+.navitem.center .ico{background:var(--kpos-primary);box-shadow:0 8px 18px rgba(249,115,22,.22)}
+
+/* Modals */
+.modal-backdrop{background:rgba(15,23,42,.48);backdrop-filter:blur(2px)}
+.sheet{border-radius:20px 20px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:var(--kpos-shadow-float)}
+.close{background:#f1f5f9;color:#475569;border-radius:10px}
+
+/* Segments / tabs */
+.seg button,.tabs button,
+.crm2-tabs button,.rp2-tabs button,.pv2-tabs button,
+.inv2-presets button,.dash2-presets button{
+  border:1px solid var(--kpos-line-strong)!important;
+  background:#fff!important;
+  color:#475569!important;
+  border-radius:10px!important;
+  font-weight:800!important;
+}
+.seg button.active,.tabs button.active,
+.crm2-tabs button.active,.rp2-tabs button.active,.pv2-tabs button.active,
+.inv2-presets button.active,.dash2-presets button.active{
+  border-color:var(--kpos-primary)!important;
+  background:var(--kpos-primary-soft)!important;
+  color:#c2410c!important;
+}
+
+/* Module surfaces */
+.dash2-kpi,.inv2-kpi,.cat2-kpi,.crm2-kpis>div,.war2-kpi,.rp2-kpi,.sv2-kv{
+  border-color:var(--kpos-line)!important;
+  border-radius:var(--kpos-radius)!important;
+  box-shadow:none!important;
+}
+.dash2-kpi-icon,.sv2-icon{border-radius:10px!important}
+.pos2-product,.pos3-cart-item,.crm2-card,.war2-card,.pv2-template{
+  border-color:var(--kpos-line)!important;
+  border-radius:var(--kpos-radius)!important;
+  box-shadow:none!important;
+}
+.pos2-product:hover,.crm2-card:hover,.war2-card:hover,.pv2-template:hover{border-color:#fdba74!important}
+
+/* Keep POS compact and readable */
+.pos2-layout,.pos3-checkout-body{font-size:13px}
+.pos2-product-name,.pos3-cart-item .item-title{font-weight:800}
+.pos2-price,.pos3-line-meta strong{color:#c2410c;font-weight:900}
+.pos3-checkout-modal,.pos3-quick-modal{border-radius:18px!important;box-shadow:var(--kpos-shadow-float)!important}
+.pos3-modal-head{border-color:var(--kpos-line)!important}
+.pos3-section-title{font-size:12px;font-weight:900;color:var(--kpos-text-2);text-transform:uppercase;letter-spacing:.04em}
+
+/* Print editor UI only; printed document styling remains controlled by template renderer */
+.pv2-editor,.pv2-preview-sheet{font-family:var(--kpos-font)}
+.pv2-field-row,.pv2-logo-box,.pv2-stage,.pv2-list,.pv2-preview{border-color:var(--kpos-line)!important}
+.pv2-paper{box-shadow:0 8px 24px rgba(15,23,42,.08)!important}
+
+/* Settings */
+.sv2-jump{border-color:var(--kpos-line)!important;background:#fff!important;border-radius:10px!important}
+.sv2-jump:hover{border-color:#fdba74!important;background:var(--kpos-primary-soft)!important}
+.sv2-action{border-color:var(--kpos-line)!important;border-radius:var(--kpos-radius)!important;background:#fff!important}
+.sv2-action:hover{border-color:#fdba74!important;background:#fffaf7!important}
+
+/* Desktop rhythm */
+@media(min-width:980px){
+  body.kpos-desktop .content{padding:22px 24px 40px!important}
+  body.kpos-desktop .card{border-color:var(--kpos-line)!important}
+  body.kpos-desktop .desktop-managed-list{border-color:var(--kpos-line)!important}
+  .desktop-product-grid>.item{border-color:var(--kpos-line)!important;border-radius:var(--kpos-radius)!important;box-shadow:none!important}
+  .desktop-product-grid>.item:hover{box-shadow:0 8px 20px rgba(15,23,42,.06)!important}
+  .desktop-cart-panel{border-color:var(--kpos-line)}
+  .desktop-customer-box{border-color:var(--kpos-primary-line);background:var(--kpos-primary-soft);border-radius:var(--kpos-radius)}
+  body.kpos-desktop .modal-backdrop .sheet{border-radius:18px!important}
+}
+
+/* Mobile rhythm */
+@media(max-width:979px){
+  :root{--kpos-control-h:44px}
+  #app{background:var(--kpos-bg)}
+  .content{padding:14px 12px 24px}
+  .card{padding:14px;border-radius:14px!important}
+  .btn{border-radius:11px!important}
+  .sheet{border-radius:18px 18px 0 0}
+  .form-row{gap:9px}
+}
+
+@media(max-width:520px){
+  body{font-size:13px}
+  .title{font-size:19px}
+  .section-title{font-size:13px}
+  .field input,.field select,.field textarea,.searchrow input{font-size:16px} /* prevent iOS zoom */
+}
