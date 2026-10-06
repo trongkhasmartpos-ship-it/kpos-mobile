@@ -1,12 +1,12 @@
 {
-  "name": "KPOS Web App & Mobile",
+  "name": "KPOS",
   "short_name": "KPOS",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#fffaf7",
+  "background_color": "#ffffff",
   "theme_color": "#f97316",
-  "description": "KPOS dùng chung trên điện thoại và máy tính: bán hàng, CRM, IMEI/Serial, bảo hành, công nợ, mẫu in và Supabase Realtime.",
+  "description": "KPOS - phần mềm bán hàng, CRM, IMEI/Serial, bảo hành, công nợ, mẫu in và đồng bộ dữ liệu.",
   "icons": [
     {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
   ]
