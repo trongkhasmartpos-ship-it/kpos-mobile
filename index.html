@@ -21,7 +21,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-pos-v2-pack-1";
+    const BUILD = "20261006-pos-v3-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -53,8 +53,9 @@
       const inventoryProCss = await fetchText("desktop/inventory-pro.css");
       const dashboardV2Css = await fetchText("desktop/dashboard-v2.css");
       const posV2Css = await fetchText("desktop/pos-v2.css");
+      const posV3Css = await fetchText("desktop/pos-v3.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -83,6 +84,7 @@
       /* Chốt từng màn hình: Tổng quan trước, POS sau. */
       injectScript(await fetchText("desktop/dashboard-v2.js"));
       injectScript(await fetchText("desktop/pos-v2.js"));
+      injectScript(await fetchText("desktop/pos-v3.js"));
       render();
     })().catch(error=>{
       console.error(error);
