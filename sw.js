@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-foundation-pack-1";
+const CACHE="kpos-mobile-v8-foundation-pack-2";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
   "./supabase/config.js",
@@ -8,7 +8,7 @@ const ASSETS=[
   "./desktop/desktop.css","./desktop/desktop.js","./desktop/pro.css","./desktop/pro.js","./desktop/pro-fix.js",
   "./desktop/business.css","./desktop/sales.js","./desktop/ops.js","./desktop/finish.css","./desktop/finish.js",
   "./desktop/returns.css","./desktop/returns.js","./desktop/loyalty.css","./desktop/loyalty.js",
-  "./desktop/foundation.css","./desktop/foundation.js"
+  "./desktop/foundation.css","./desktop/foundation.js","./desktop/table-pack.css","./desktop/table-pack.js"
 ];
 self.addEventListener("install",event=>{
   self.skipWaiting();
