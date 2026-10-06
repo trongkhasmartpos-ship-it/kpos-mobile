@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-reports-v2-pack-1";
+const CACHE="kpos-mobile-v8-print-v2-pack-1";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
   "./supabase/config.js",
@@ -18,7 +18,8 @@ const ASSETS=[
   "./desktop/catalog-v2.css","./desktop/catalog-v2-final.js",
   "./desktop/crm-v2.css","./desktop/crm-v2.js",
   "./desktop/warranty-v2.css","./desktop/warranty-v2.js",
-  "./desktop/reports-v2.css","./desktop/reports-v2.js"
+  "./desktop/reports-v2.css","./desktop/reports-v2.js",
+  "./desktop/print-v2.css","./desktop/print-v2.js"
 ];
 self.addEventListener("install",event=>{
   self.skipWaiting();
