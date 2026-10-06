@@ -21,7 +21,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-reports-v2-pack-1";
+    const BUILD = "20261006-print-v2-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -59,8 +59,9 @@
       const crmV2Css = await fetchText("desktop/crm-v2.css");
       const warrantyV2Css = await fetchText("desktop/warranty-v2.css");
       const reportsV2Css = await fetchText("desktop/reports-v2.css");
+      const printV2Css = await fetchText("desktop/print-v2.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css + "\n" + printV2Css;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -86,7 +87,7 @@
       injectScript(await fetchText("desktop/operations-v2.js"));
       injectScript(await fetchText("desktop/inventory-pro.js"));
       injectScript(await fetchText("desktop/final-audit.js"));
-      /* Chốt từng màn hình: Tổng quan -> POS -> Hóa đơn -> Sản phẩm/Kho -> Khách hàng/CRM -> Bảo hành -> Báo cáo. */
+      /* Chốt từng màn hình: Tổng quan -> POS -> Hóa đơn -> Sản phẩm/Kho -> Khách hàng/CRM -> Bảo hành -> Báo cáo -> Mẫu in. */
       injectScript(await fetchText("desktop/dashboard-v2.js"));
       injectScript(await fetchText("desktop/pos-v2.js"));
       injectScript(await fetchText("desktop/pos-v3.js"));
@@ -95,6 +96,7 @@
       injectScript(await fetchText("desktop/crm-v2.js"));
       injectScript(await fetchText("desktop/warranty-v2.js"));
       injectScript(await fetchText("desktop/reports-v2.js"));
+      injectScript(await fetchText("desktop/print-v2.js"));
       render();
     })().catch(error=>{
       console.error(error);
