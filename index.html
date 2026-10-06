@@ -20,6 +20,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
+    const BUILD = "20261006-desktop-width-fix-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -27,7 +28,8 @@
     const CORE_CSS_PARTS = ["v6/css-00.txt"];
 
     async function fetchText(path){
-      const response = await fetch(path, {cache:"no-cache"});
+      const joiner = path.includes('?') ? '&' : '?';
+      const response = await fetch(`${path}${joiner}build=${encodeURIComponent(BUILD)}`, {cache:"no-store"});
       if(!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
       return response.text();
     }
