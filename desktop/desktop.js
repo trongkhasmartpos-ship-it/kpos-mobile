@@ -23,7 +23,7 @@
     if(!isDesktop())return mobileNav();
     const c=window.KPOS_CLOUD;
     return `<aside class="desktop-sidebar">
-      <div class="desktop-brand"><div class="desktop-brand-mark">KP</div><div><div class="desktop-brand-name">KPOS</div><div class="desktop-brand-sub">Web App • Mobile • Realtime</div></div></div>
+      <div class="desktop-brand" style="display:block;padding:8px 8px 16px"><img src="icons/kpos-logo.png" alt="KPOS" style="display:block;width:174px;max-width:100%;height:auto;object-fit:contain"><div class="desktop-brand-sub" style="margin-top:7px">Web App • Mobile • Realtime</div></div>
       <div class="desktop-nav-scroll">
         <div class="desktop-nav-group">Bán hàng</div>
         ${navButton('dashboard','⌂','Tổng quan')}
@@ -55,7 +55,7 @@
   window.topbar=topbar=function(title,subtitle=''){
     if(!isDesktop())return mobileTopbar(title,subtitle);
     const sync=cloudText();
-    return `<header class="desktop-topbar"><div><h1>${esc(title)}</h1><div class="desktop-subtitle">${esc(subtitle||'KPOS Web App')} • ☁ ${esc(sync)}</div></div><div class="desktop-top-actions">${window.KPOS_CLOUD?.user?`<button class="desktop-sync-pill" onclick="syncNow()">↻ Đồng bộ ngay</button>`:''}<div class="desktop-avatar">KP</div></div></header>`;
+    return `<header class="desktop-topbar"><div><h1>${esc(title)}</h1><div class="desktop-subtitle">${esc(subtitle||'KPOS')} • ☁ ${esc(sync)}</div></div><div class="desktop-top-actions">${window.KPOS_CLOUD?.user?`<button class="desktop-sync-pill" onclick="syncNow()">↻ Đồng bộ ngay</button>`:''}<div class="desktop-avatar">KP</div></div></header>`;
   };
 
   window.posView=posView=function(){
