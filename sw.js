@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-design-system-v1-pack-1";
+const CACHE="kpos-mobile-v8-print-agent-v1-pack-1";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
   "./supabase/config.js",
@@ -21,7 +21,8 @@ const ASSETS=[
   "./desktop/reports-v2.css","./desktop/reports-v2.js",
   "./desktop/print-v2.css","./desktop/print-v2.js",
   "./desktop/settings-v2.css","./desktop/settings-v2.js",
-  "./desktop/design-system-v1.css"
+  "./desktop/design-system-v1.css",
+  "./desktop/print-agent.css","./desktop/print-agent.js"
 ];
 self.addEventListener("install",event=>{
   self.skipWaiting();
