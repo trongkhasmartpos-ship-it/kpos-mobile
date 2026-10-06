@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-operations-v2-pack-1";
+const CACHE="kpos-mobile-v8-inventory-pro-pack-1";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
   "./supabase/config.js",
@@ -10,7 +10,8 @@ const ASSETS=[
   "./desktop/returns.css","./desktop/returns.js","./desktop/loyalty.css","./desktop/loyalty.js",
   "./desktop/foundation.css","./desktop/foundation.js","./desktop/table-pack.css","./desktop/table-pack.js",
   "./desktop/system-audit.css","./desktop/system-audit.js",
-  "./desktop/operations-v2.css","./desktop/operations-v2.js"
+  "./desktop/operations-v2.css","./desktop/operations-v2.js",
+  "./desktop/inventory-pro.css","./desktop/inventory-pro.js"
 ];
 self.addEventListener("install",event=>{
   self.skipWaiting();
