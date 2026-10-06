@@ -1,0 +1,29 @@
+/* KPOS branding scope fix: sidebar/menu stays exactly in the original dark KPOS style. */
+@media (min-width:980px){
+  body.kpos-pos4{--desk-side:252px!important;background:var(--desk-bg)!important}
+  body.kpos-pos4 .desktop-sidebar{width:var(--desk-side)!important;background:#111827!important;color:#fff!important;padding:18px 14px!important;border-right:0!important;box-shadow:8px 0 30px rgba(17,24,39,.08)!important}
+  body.kpos-pos4 .desktop-brand{display:flex!important;align-items:center!important;gap:11px!important;padding:5px 8px 18px!important;border-bottom:1px solid rgba(255,255,255,.10)!important;margin-bottom:10px!important}
+  body.kpos-pos4 .desktop-brand-mark{width:42px!important;height:42px!important;border-radius:13px!important;display:grid!important;place-items:center!important;background:var(--desk-orange)!important;color:#fff!important;font-weight:900!important;font-size:19px!important;box-shadow:0 8px 18px rgba(249,115,22,.28)!important}
+  body.kpos-pos4 .desktop-brand-name{font-size:17px!important;font-weight:900!important;line-height:1.15!important;color:#fff!important}
+  body.kpos-pos4 .desktop-brand-sub{font-size:11px!important;color:#9ca3af!important;margin-top:3px!important;line-height:normal!important}
+  body.kpos-pos4 .desktop-nav-group{display:block!important;font-size:10px!important;text-transform:uppercase!important;letter-spacing:.12em!important;color:#6b7280!important;font-weight:800!important;padding:13px 10px 7px!important}
+  body.kpos-pos4 .desktop-nav-btn{width:100%!important;border:0!important;background:transparent!important;color:#d1d5db!important;display:flex!important;align-items:center!important;gap:11px!important;padding:10px 11px!important;border-radius:11px!important;text-align:left!important;font-size:13px!important;font-weight:700!important;margin:2px 0!important}
+  body.kpos-pos4 .desktop-nav-btn:hover{background:#1f2937!important;color:#fff!important}
+  body.kpos-pos4 .desktop-nav-btn.active{background:#fff7ed!important;color:#fb923c!important;border-left:0!important;padding-left:11px!important}
+  body.kpos-pos4 .desktop-nav-btn .ico{width:22px!important;text-align:center!important;font-size:17px!important}
+  body.kpos-pos4 .desktop-sidebar-foot{border-top:1px solid rgba(255,255,255,.10)!important;padding-top:10px!important;margin-top:8px!important}
+  body.kpos-pos4 .desktop-cloud{font-size:11px!important;color:#9ca3af!important;padding:4px 10px 10px!important}
+
+  .pos4-top{left:var(--desk-side)!important;display:grid!important;grid-template-columns:118px minmax(180px,1fr) auto!important;align-items:center!important;justify-content:stretch!important}
+  .pos4-screen-logo{height:44px;display:flex;align-items:center;justify-content:flex-start;overflow:hidden;padding-right:8px;border-right:1px solid #eceef1}
+  .pos4-screen-logo img{display:block;width:106px;max-height:38px;object-fit:contain;object-position:left center}
+  .pos4-tabs{padding-left:4px}
+  .pos4-shell{left:var(--desk-side)!important}
+  body.kpos-pos4 .modal-backdrop{padding-left:var(--desk-side)!important}
+}
+
+@media (min-width:980px) and (max-width:1200px){
+  body.kpos-pos4{--desk-side:252px!important}
+  .pos4-top{grid-template-columns:96px minmax(160px,1fr) auto!important}
+  .pos4-screen-logo img{width:86px}
+}
