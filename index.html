@@ -15,13 +15,13 @@
 </head>
 <body>
   <div id="app">
-    <div style="min-height:100vh;display:grid;place-items:center;background:#fffaf7;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#111827;padding:24px;text-align:center">
-      <div><div style="font-size:42px;font-weight:900;color:#f97316">KP</div><b>Đang tải KPOS…</b><div style="font-size:12px;color:#6b7280;margin-top:6px">Mobile • Web App • Supabase Realtime</div></div>
+    <div style="min-height:100vh;display:grid;place-items:center;background:#f6f7f9;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#111827;padding:24px;text-align:center">
+      <div><div style="font-size:42px;font-weight:900;color:#f97316">KP</div><b>Đang tải KPOS…</b><div style="font-size:12px;color:#64748b;margin-top:6px">Mobile • Web App • Supabase Realtime</div></div>
     </div>
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-settings-v2-pack-1";
+    const BUILD = "20261006-design-system-v1-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -61,8 +61,10 @@
       const reportsV2Css = await fetchText("desktop/reports-v2.css");
       const printV2Css = await fetchText("desktop/print-v2.css");
       const settingsV2Css = await fetchText("desktop/settings-v2.css");
+      /* Design system luôn nạp cuối để đồng bộ font, màu, input, button, card, table và modal. */
+      const designSystemCss = await fetchText("desktop/design-system-v1.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css + "\n" + printV2Css + "\n" + settingsV2Css;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css + "\n" + printV2Css + "\n" + settingsV2Css + "\n" + designSystemCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -103,12 +105,12 @@
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
-        <div style="min-height:100vh;display:grid;place-items:center;background:#fffaf7;font-family:system-ui;padding:24px">
-          <div style="max-width:420px;background:#fff;border:1px solid #fed7aa;border-radius:20px;padding:20px">
+        <div style="min-height:100vh;display:grid;place-items:center;background:#f6f7f9;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;padding:24px">
+          <div style="max-width:420px;background:#fff;border:1px solid #fed7aa;border-radius:18px;padding:20px">
             <div style="font-size:28px;font-weight:900;color:#f97316">KPOS</div>
             <h3>Không tải được ứng dụng</h3>
             <p>Vui lòng tải lại trang. Nếu vẫn lỗi, hãy kiểm tra kết nối mạng.</p>
-            <div style="font-size:12px;color:#6b7280;word-break:break-word">${String(error)}</div>
+            <div style="font-size:12px;color:#64748b;word-break:break-word">${String(error)}</div>
             <button onclick="location.reload()" style="width:100%;margin-top:12px;border:0;border-radius:12px;padding:12px;background:#f97316;color:white;font-weight:800">TẢI LẠI</button>
           </div>
         </div>`;
