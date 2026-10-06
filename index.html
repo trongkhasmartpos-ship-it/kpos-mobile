@@ -20,7 +20,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-desktop-width-fix-1";
+    const BUILD = "20261006-returns-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -43,8 +43,9 @@
       const desktopProCss = await fetchText("desktop/pro.css");
       const businessCss = await fetchText("desktop/business.css");
       const finishCss = await fetchText("desktop/finish.css");
+      const returnsCss = await fetchText("desktop/returns.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -58,6 +59,7 @@
       injectScript(await fetchText("desktop/sales.js"));
       injectScript(await fetchText("desktop/ops.js"));
       injectScript(await fetchText("desktop/finish.js"));
+      injectScript(await fetchText("desktop/returns.js"));
 
       injectScript(await fetchText("v8/patch.js"));
       injectScript(await fetchText("v8/diagnostics.js"));
