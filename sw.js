@@ -1,6 +1,6 @@
-const CACHE="kpos-mobile-v8-pos-v4-layout-pack-1";
+const CACHE="kpos-mobile-v8-logo-v1-pack-1";
 const ASSETS=[
-  "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
+  "./","./index.html","./manifest.webmanifest","./icons/icon.svg","./icons/kpos-logo.png",
   "./supabase/config.js",
   "./v6/css-00.txt",
   "./v6/app-00.txt","./v6/app-01.txt","./v6/app-02.txt","./v6/app-03.txt","./v6/app-04.txt","./v6/app-05.txt",
