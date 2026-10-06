@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-completion-1";
+const CACHE="kpos-mobile-v8-desktop-width-fix-1";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
   "./supabase/config.js",
