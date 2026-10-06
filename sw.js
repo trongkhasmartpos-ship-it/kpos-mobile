@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-print-agent-v1-pack-1";
+const CACHE="kpos-mobile-v8-pos-v4-layout-pack-1";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg",
   "./supabase/config.js",
@@ -14,6 +14,7 @@ const ASSETS=[
   "./desktop/inventory-pro.css","./desktop/inventory-pro.js","./desktop/final-audit.js",
   "./desktop/dashboard-v2.css","./desktop/dashboard-v2.js",
   "./desktop/pos-v2.css","./desktop/pos-v2.js","./desktop/pos-v3.css","./desktop/pos-v3.js",
+  "./desktop/pos-layout-v4.css","./desktop/pos-layout-v4.js",
   "./desktop/invoice-v2.css","./desktop/invoice-v2.js",
   "./desktop/catalog-v2.css","./desktop/catalog-v2-final.js",
   "./desktop/crm-v2.css","./desktop/crm-v2.js",
