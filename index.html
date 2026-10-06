@@ -21,7 +21,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-inventory-pro-pack-1";
+    const BUILD = "20261006-inventory-pro-pack-2";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -77,6 +77,7 @@
       injectScript(await fetchText("desktop/system-audit.js"));
       injectScript(await fetchText("desktop/operations-v2.js"));
       injectScript(await fetchText("desktop/inventory-pro.js"));
+      injectScript(await fetchText("desktop/final-audit.js"));
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
