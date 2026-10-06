@@ -20,7 +20,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261006-foundation-pack-2";
+    const BUILD = "20261006-system-audit-pack-1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -47,8 +47,9 @@
       const loyaltyCss = await fetchText("desktop/loyalty.css");
       const foundationCss = await fetchText("desktop/foundation.css");
       const tableCss = await fetchText("desktop/table-pack.css");
+      const auditCss = await fetchText("desktop/system-audit.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -69,6 +70,8 @@
 
       injectScript(await fetchText("v8/patch.js"));
       injectScript(await fetchText("v8/diagnostics.js"));
+      /* Nạp cuối để kiểm tra đúng renderer + cloud state cuối cùng. */
+      injectScript(await fetchText("desktop/system-audit.js"));
     })().catch(error=>{
       console.error(error);
       document.getElementById("app").innerHTML = `
