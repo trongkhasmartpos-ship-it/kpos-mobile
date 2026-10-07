@@ -1,0 +1,50 @@
+/* KPOS inline POS checkout V1 */
+@media (min-width:980px){
+  .pos4-inline-date{height:42px!important}
+  .pos4-inline-date input{border:0!important;background:transparent!important;text-align:right;font-size:11px!important;font-weight:900;color:#111827;padding:0!important;min-width:190px;outline:none}
+
+  .pos4-inline-discount-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:7px;padding:8px}
+  .pos4-inline-fee-grid{display:grid;grid-template-columns:1.25fr 1fr .85fr;gap:7px;padding:8px}
+  .pos4-inline-field{position:relative;border:1px solid #e6e7ea;border-radius:7px;min-height:42px;padding:4px 8px;display:flex;flex-direction:column;justify-content:center;background:#fff;min-width:0}
+  .pos4-inline-field small{font-size:8px;color:#8b929c;line-height:1.1;margin-bottom:2px}
+  .pos4-inline-field input{border:0!important;background:transparent!important;padding:0!important;height:21px!important;min-height:21px!important;font-size:10px!important;color:#111827!important;outline:none!important;width:100%;box-shadow:none!important}
+  .pos4-inline-field input::placeholder{color:#b0b5bc}
+  .pos4-inline-hint{font-size:8px;font-style:normal;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .pos4-inline-hint.ok{color:#0f9f83}.pos4-inline-hint.bad{color:#dc2626}
+
+  .pos4-inline-money{height:42px;border:1px solid #e6e7ea;border-radius:7px;display:grid;grid-template-columns:20px 1fr auto;align-items:center;padding:0 5px 0 8px;gap:3px;min-width:0}
+  .pos4-inline-money>span{font-size:12px;color:#9aa0a8}
+  .pos4-inline-money>input{border:0!important;background:transparent!important;padding:0 4px!important;height:30px!important;min-height:30px!important;font-size:10px!important;outline:none!important;min-width:0;width:100%;box-shadow:none!important}
+  .pos4-inline-value-switch{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px}
+  .pos4-inline-value-switch>input{min-width:0}
+  .pos4-inline-switch{display:flex;align-items:center;border-left:1px solid #e6e7ea;padding-left:4px;gap:2px}
+  .pos4-inline-switch button{height:27px;min-width:28px;border:0;background:#fff;color:#555;border-radius:5px;font-size:10px;font-weight:900;padding:0 6px;cursor:pointer}
+  .pos4-inline-switch button.active{background:#ff6600;color:#fff}
+
+  .pos4-inline-methods{padding:8px 8px 4px!important;gap:6px!important}
+  .pos4-inline-methods button{border:1px solid #e5e7eb;border-radius:6px;padding:6px 9px;font-size:9px;font-weight:900;color:#2c3137;background:#fff;cursor:pointer}
+  .pos4-inline-methods button.active{border-color:#ffb48a;background:#fff1e8;color:#f05a00}
+  .pos4-inline-payment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:4px 8px 7px}
+  .pos4-inline-payfield{border:1px solid #e6e7ea;border-radius:7px;padding:4px 7px;background:#fff;min-width:0}
+  .pos4-inline-payfield>span{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .pos4-inline-payfield small{font-size:8px;color:#8b929c}
+  .pos4-inline-payfield button{border:0;background:transparent;color:#f05a00;font-size:8px;font-weight:800;padding:0;cursor:pointer}
+  .pos4-inline-payfield input{border:0!important;background:transparent!important;height:22px!important;min-height:22px!important;padding:0!important;font-size:10px!important;font-weight:800!important;color:#111827!important;outline:none!important;width:100%;box-shadow:none!important}
+  .pos4-inline-diff{margin:0 8px 7px;border-radius:6px;padding:5px 8px;font-size:9px;font-weight:800;text-align:center}
+  .pos4-inline-diff.ok{background:#ecfdf5;color:#047857}.pos4-inline-diff.bad{background:#fff7ed;color:#c2410c}
+  .pos4-inline-note{padding:0 8px 8px}
+  .pos4-inline-note label{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;font-size:9px;color:#6b7280}
+  .pos4-inline-note input{border:1px solid #e6e7ea!important;border-radius:6px!important;height:30px!important;min-height:30px!important;padding:0 8px!important;font-size:9px!important;background:#fff!important;outline:none}
+
+  .pos4-payment{min-height:184px!important}
+  .pos4-pay-scroll{padding-bottom:10px!important}
+  .pos4-pay-card header strong{font-weight:900}
+  #co_total_text{font-size:13px!important;color:#ff4f21!important}
+}
+
+@media (min-width:980px) and (max-width:1250px){
+  .pos4-inline-discount-grid{grid-template-columns:1fr 1fr}
+  .pos4-inline-discount-grid>.pos4-inline-field:last-child{grid-column:1/-1}
+  .pos4-inline-fee-grid{grid-template-columns:1fr 1fr}
+  .pos4-inline-fee-grid>.pos4-inline-field:last-child{grid-column:1/-1}
+}
