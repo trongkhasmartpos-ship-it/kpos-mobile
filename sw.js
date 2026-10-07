@@ -1,4 +1,4 @@
-const CACHE="kpos-mobile-v8-pos-inline-checkout-v1";
+const CACHE="kpos-mobile-v8-pos-inline-items-v1";
 const ASSETS=[
   "./","./index.html","./manifest.webmanifest","./icons/icon.svg","./icons/kpos-logo.png",
   "./supabase/config.js",
