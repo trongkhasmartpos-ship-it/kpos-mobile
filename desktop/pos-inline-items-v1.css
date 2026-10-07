@@ -1,0 +1,22 @@
+/* KPOS POS V4 inline item controls */
+@media (min-width:980px){
+  .pos4-inline-price-editor{min-width:0;display:flex;flex-direction:column;gap:2px}
+  .pos4-inline-price-editor>small{font-size:8px;color:#8b929c;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+  .pos4-inline-price-editor>div{display:flex;align-items:center;gap:4px}
+  .pos4-inline-price-editor input{width:104px;height:28px!important;border:1px solid #e3e5e8!important;border-radius:7px!important;padding:0 8px!important;font-size:11px!important;font-weight:900!important;color:#111827!important;background:#fff!important}
+  .pos4-inline-price-editor button{width:28px;height:28px;border:1px solid #ffd7bd;background:#fff7ed;color:#ea580c;border-radius:7px;font-weight:900;cursor:pointer}
+  .pos4-inline-price-editor em{font-style:normal;font-size:8px;color:#9ca3af;white-space:nowrap}
+  .pos4-inline-item-extra{display:flex;align-items:center;gap:7px;margin-top:7px;min-width:0}
+  .pos4-inline-imei{display:flex;align-items:center;gap:5px;min-width:0;flex:0 1 auto}
+  .pos4-inline-imei>button{height:28px;border:1px solid #bdebe2;background:#f1fbf8;color:#0f8e78;border-radius:7px;padding:0 8px;font-size:9px;font-weight:900;white-space:nowrap;cursor:pointer}
+  .pos4-inline-imei-tags{display:flex;gap:4px;min-width:0;overflow:auto;max-width:190px;scrollbar-width:none}
+  .pos4-inline-imei-tags::-webkit-scrollbar{display:none}
+  .pos4-inline-imei-tags span{display:inline-flex;align-items:center;height:24px;padding:0 6px;background:#f3f4f6;border-radius:6px;color:#4b5563;font-size:8px;font-weight:800;white-space:nowrap}
+  .pos4-inline-item-note{height:28px!important;min-width:120px;flex:1;border:1px solid #e5e7eb!important;border-radius:7px!important;padding:0 8px!important;font-size:9px!important;background:#fff!important;color:#374151!important}
+}
+
+@media (min-width:980px) and (max-width:1200px){
+  .pos4-inline-item-extra{flex-wrap:wrap}
+  .pos4-inline-item-note{width:100%;flex-basis:100%}
+  .pos4-inline-imei-tags{max-width:140px}
+}
