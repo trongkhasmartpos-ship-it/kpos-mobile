@@ -21,7 +21,7 @@
   </div>
   <input id="imagePicker" type="file" accept="image/*" multiple hidden />
   <script>
-    const BUILD = "20261007-pos-brand-scope-fix-1";
+    const BUILD = "20261007-pos-inline-checkout-v1";
     const CORE_APP_PARTS = [
       "v6/app-00.txt","v6/app-01.txt","v6/app-02.txt",
       "v6/app-03.txt","v6/app-04.txt","v6/app-05.txt"
@@ -65,8 +65,9 @@
       const printAgentCss = await fetchText("desktop/print-agent.css");
       const posV4Css = await fetchText("desktop/pos-layout-v4.css");
       const brandingScopeCss = await fetchText("desktop/branding-scope-fix.css");
+      const posInlineCss = await fetchText("desktop/pos-inline-checkout-v1.css");
       const style = document.createElement("style");
-      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css + "\n" + printV2Css + "\n" + settingsV2Css + "\n" + designSystemCss + "\n" + printAgentCss + "\n" + posV4Css + "\n" + brandingScopeCss;
+      style.textContent = css + "\n" + desktopCss + "\n" + desktopProCss + "\n" + businessCss + "\n" + finishCss + "\n" + returnsCss + "\n" + loyaltyCss + "\n" + foundationCss + "\n" + tableCss + "\n" + auditCss + "\n" + operationsCss + "\n" + inventoryProCss + "\n" + dashboardV2Css + "\n" + posV2Css + "\n" + posV3Css + "\n" + invoiceV2Css + "\n" + catalogV2Css + "\n" + crmV2Css + "\n" + warrantyV2Css + "\n" + reportsV2Css + "\n" + printV2Css + "\n" + settingsV2Css + "\n" + designSystemCss + "\n" + printAgentCss + "\n" + posV4Css + "\n" + brandingScopeCss + "\n" + posInlineCss;
       document.head.appendChild(style);
 
       const code = (await Promise.all(CORE_APP_PARTS.map(fetchText))).join("");
@@ -101,6 +102,8 @@
       injectScript(await fetchText("desktop/print-agent.js"));
       injectScript(await fetchText("desktop/pos-layout-v4.js"));
       injectScript(await fetchText("desktop/branding-scope-fix.js"));
+      injectScript(await fetchText("desktop/pos-inline-checkout-v1.js"));
+      injectScript(await fetchText("desktop/pos-inline-checkout-v1-fix.js"));
       render();
     })().catch(error=>{
       console.error(error);
